@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
+      http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
+    <kcfgfile name=""/>
+    <group name="General">
+        <entry name="useSharedWatchlist" type="Bool">
+            <label>Follow Stock Glass watchlist file</label>
+            <default>true</default>
+        </entry>
+        <entry name="symbols" type="String">
+            <default>SPY,QQQ,AAPL,MSFT,NVDA,GOOGL,AMZN,META,TSLA,RKLB,SPCX</default>
+        </entry>
+        <entry name="refreshInterval" type="Int">
+            <default>10</default>
+        </entry>
+        <entry name="maxItems" type="Int">
+            <default>40</default>
+        </entry>
+        <entry name="newsPerSymbol" type="Int">
+            <default>5</default>
+        </entry>
+        <entry name="showPublisher" type="Bool">
+            <default>true</default>
+        </entry>
+        <entry name="showTickers" type="Bool">
+            <default>true</default>
+        </entry>
+        <entry name="showTime" type="Bool">
+            <default>true</default>
+        </entry>
+        <entry name="showSentiment" type="Bool">
+            <default>true</default>
+        </entry>
+        <!-- empty default — never commit real keys; paste in settings or use ~/.config/stockglass/deepseek.key -->
+        <entry name="deepseekApiKey" type="String">
+            <default></default>
+        </entry>
+        <entry name="useDeepSeek" type="Bool">
+            <default>true</default>
+        </entry>
+        <entry name="deepseekModel" type="String">
+            <default>deepseek-chat</default>
+        </entry>
+        <entry name="glassOpacity" type="Int">
+            <default>68</default>
+        </entry>
+        <entry name="positiveColor" type="Color">
+            <default>#30d158</default>
+        </entry>
+        <entry name="negativeColor" type="Color">
+            <default>#ff453a</default>
+        </entry>
+        <entry name="neutralColor" type="Color">
+            <default>#8e8e93</default>
+        </entry>
+        <entry name="useCustomColors" type="Bool">
+            <default>true</default>
+        </entry>
+        <entry name="cardColor" type="Color">
+            <default>#1a1a22</default>
+        </entry>
+        <entry name="textColor" type="Color">
+            <default>#f2f2f7</default>
+        </entry>
+        <entry name="mutedTextColor" type="Color">
+            <default>#8e8e93</default>
+        </entry>
+        <entry name="accentColor" type="Color">
+            <default>#0a84ff</default>
+        </entry>
+        <entry name="borderOpacity" type="Int">
+            <default>16</default>
+        </entry>
+        <entry name="cornerRadius" type="Int">
+            <default>20</default>
+        </entry>
+    </group>
+</kcfg>

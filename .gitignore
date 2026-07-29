@@ -1,0 +1,33 @@
+# Secrets & local runtime (never commit)
+.config/
+**/deepseek.key
+**/*secret*
+**/*credentials*
+ds_payload.json
+*.key
+.env
+.env.*
+
+# Editor / OS
+.DS_Store
+*~
+*.swp
+.idea/
+.vscode/
+*.qmlc
+*.jsc
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Build / packages
+*.tar.gz
+*.zip
+dist/
+build/
+
+# Git / tooling
+.grok/

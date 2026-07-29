@@ -1,0 +1,20 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "",
+                "Name": "TickerLens"
+            }
+        ],
+        "Category": "Online Services",
+        "Description": "Frosted-glass market watchlist for Plasma 6 — live prices, ATH distance, earnings, sparklines, portfolio & alerts. Free market data.",
+        "Icon": "office-chart-line",
+        "Id": "com.github.stockglass",
+        "License": "GPL-3.0-or-later",
+        "Name": "TickerLens",
+        "Version": "1.5.0",
+        "Website": "https://github.com/emmanouil/tickerlens"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0"
+}
