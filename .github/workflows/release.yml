@@ -1,0 +1,199 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (e.g. v1.5.0)"
+        required: true
+        default: "v1.5.0"
+
+permissions:
+  contents: write
+
+jobs:
+  linux-plasma:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Package Plasma widgets
+        run: |
+          VERSION="${{ github.event.inputs.tag || github.ref_name }}"
+          VERSION="${VERSION#v}"
+          STAGE="TickerLens-linux-plasma6-${VERSION}"
+          mkdir -p dist/"$STAGE"
+          cp -a package news-package install.sh LICENSE NOTICE README.md SECURITY.md dist/"$STAGE"/
+          chmod +x dist/"$STAGE"/install.sh
+          cat > dist/"$STAGE"/INSTALL.txt << EOF
+          TickerLens — Linux (KDE Plasma 6)
+          =================================
+
+          Requirements: Plasma 6 desktop
+
+          Install:
+            chmod +x install.sh
+            ./install.sh
+
+          Then: right-click desktop → Add Widgets → TickerLens / TickerLens News
+
+          Uninstall:
+            kpackagetool6 --type Plasma/Applet --remove com.github.stockglass
+            kpackagetool6 --type Plasma/Applet --remove com.github.stockglass.news
+          EOF
+          # fix INSTALL.txt leading spaces from heredoc
+          sed -i 's/^          //' dist/"$STAGE"/INSTALL.txt
+          cd dist
+          tar -czf "${STAGE}.tar.gz" "$STAGE"
+          ls -la
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-plasma
+          path: dist/*.tar.gz
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Ninja
+        run: choco install ninja -y
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.7.3"
+          host: windows
+          target: desktop
+          arch: win64_msvc2019_64
+          modules: ""
+          tools: ""
+          cache: true
+          setup-python: false
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Configure & build
+        shell: pwsh
+        run: |
+          cd windows
+          Write-Host "QT_ROOT_DIR=$env:QT_ROOT_DIR"
+          cmake -B build -DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR" -DCMAKE_BUILD_TYPE=Release -G Ninja
+          cmake --build build --config Release -j 4
+
+      - name: Package portable + installer
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $version = "${{ github.event.inputs.tag || github.ref_name }}"
+          $version = $version.TrimStart("v")
+
+          $exeCandidates = @(
+            "windows/build/TickerLens.exe",
+            "windows/build/Release/TickerLens.exe"
+          )
+          $exe = $exeCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $exe) { throw "TickerLens.exe not found after build" }
+          $buildDir = Split-Path $exe -Parent
+
+          # Deploy Qt runtime next to exe
+          windeployqt --release --qmldir windows/qml --compiler-runtime $exe
+
+          # Stage clean portable folder
+          $stageName = "TickerLens-windows-x64-$version"
+          $stage = "dist/$stageName"
+          New-Item -ItemType Directory -Force -Path $stage | Out-Null
+
+          # Copy deployed tree (exe + dlls + qml + plugins)
+          Get-ChildItem $buildDir -Force | Where-Object {
+            $_.Name -notin @("CMakeFiles","CMakeCache.txt",".ninja_deps",".ninja_log","build.ninja","cmake_install.cmake")
+          } | ForEach-Object {
+            Copy-Item $_.FullName -Destination (Join-Path $stage $_.Name) -Recurse -Force
+          }
+
+          Copy-Item windows/scripts/rate_news.py $stage -Force
+          Copy-Item windows/packaging/Install-TickerLens.ps1 $stage -Force
+          Copy-Item windows/packaging/Install.bat $stage -Force
+          Copy-Item windows/packaging/README-WINDOWS.txt $stage -Force
+          Copy-Item LICENSE $stage -Force
+
+          # Zip
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $zip = "dist/$stageName.zip"
+          if (Test-Path $zip) { Remove-Item $zip -Force }
+          Compress-Archive -Path $stage -DestinationPath $zip -Force
+          Get-Item $zip | Format-List Name, Length, FullName
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-portable
+          path: dist/*.zip
+
+  publish:
+    needs: [linux-plasma, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Prepare release assets
+        id: prep
+        run: |
+          VERSION="${{ github.event.inputs.tag || github.ref_name }}"
+          if [[ "$VERSION" != v* ]]; then VERSION="v$VERSION"; fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          mkdir -p release-assets
+          find artifacts -type f \( -name '*.zip' -o -name '*.tar.gz' \) -exec cp -v {} release-assets/ \;
+          ls -lah release-assets/
+
+          cat > release-notes.md << EOF
+          ## TickerLens ${VERSION}
+
+          Free frosted-glass market widgets — **KDE Plasma 6** and **Windows 11**.
+
+          ### Windows 11
+          1. Download **\`TickerLens-windows-x64-*.zip\`**
+          2. Extract the folder
+          3. Double-click **\`Install.bat\`** (or run \`TickerLens.exe\` portable)
+          4. Optional: install [VC++ Redistributable x64](https://aka.ms/vs/17/release/vc_redist.x64.exe) if the app fails to start
+
+          ### Linux (KDE Plasma 6)
+          1. Download **\`TickerLens-linux-plasma6-*.tar.gz\`**
+          2. Extract and run:
+             \`\`\`bash
+             chmod +x install.sh && ./install.sh
+             \`\`\`
+          3. Desktop → **Add Widgets** → TickerLens / TickerLens News
+
+          ### Notes
+          - Quotes & news: free public data (no key)
+          - Optional AI news ratings: put DeepSeek key in app config (see README)
+          - License: **GPL-3.0**
+
+          Full docs: https://github.com/EmmanouelKontos/TickerLens
+          EOF
+          # strip leading spaces from heredoc
+          sed -i 's/^          //' release-notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.prep.outputs.version }}
+          name: TickerLens ${{ steps.prep.outputs.version }}
+          body_path: release-notes.md
+          files: release-assets/*
+          draft: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
