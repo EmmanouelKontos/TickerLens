@@ -31,7 +31,7 @@ PlasmoidItem {
     readonly property string deepseekApiKeyConfig: (Plasmoid.configuration.deepseekApiKey || "").trim()
     readonly property string deepseekModel: (Plasmoid.configuration.deepseekModel || "deepseek-chat").trim() || "deepseek-chat"
     readonly property bool checkForUpdates: Plasmoid.configuration.checkForUpdates !== false
-    readonly property string appVersion: "1.7.0"
+    readonly property string appVersion: "1.7.1"
     readonly property string updateApiUrl: "https://api.github.com/repos/EmmanouelKontos/TickerLens/releases/latest"
     readonly property string updateFallbackUrl: "https://github.com/EmmanouelKontos/TickerLens/releases/latest"
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.1
+
+- Fixed the Windows package failing to start by rebuilding the executable with
+  the same MinGW 13.1 C++ ABI used by the bundled Qt 6.7 runtime.
+- Removed incompatible LLVM C++ runtime libraries from the Windows package.
+
 ## 1.7.0
 
 - Reworked Windows glass rendering to use native Acrylic composition for
