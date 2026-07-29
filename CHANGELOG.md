@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.5
+
+- UI: real rounded corners (window region + larger radius), darker frosted panel
+- Always-on-top **off by default**; no longer stuck above other apps
+- Glass opacity + corner radius sliders apply **live**
+- Check for updates button wired correctly via signals
+
 ## 1.6.4
 
 - **Frosted glass**: Windows 11 acrylic blur + translucent tint (closer to KDE Plasma)

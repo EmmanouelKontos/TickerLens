@@ -46,7 +46,7 @@ GlassWindow {
     readonly property string panelSymbol: (AppSettings.panelSymbol || "").trim().toUpperCase()
 
     readonly property bool useCustomColors: AppSettings.useCustomColors !== false
-    readonly property int glassOpacity: AppSettings.glassOpacity || 68
+    // Appearance driven by GlassWindow + AppSettings (live opacity/radius)
     readonly property color cardColor: AppSettings.cardColor
     readonly property color textColor: AppSettings.textColor
     readonly property color mutedTextColor: AppSettings.mutedTextColor
@@ -55,8 +55,6 @@ GlassWindow {
     readonly property color athColor: AppSettings.athColor
     readonly property color accentColor: AppSettings.accentColor
     readonly property int borderOpacity: AppSettings.borderOpacity || 16
-    readonly property int cornerRadius: AppSettings.cornerRadius || 20
-    readonly property real glassAlpha: glassOpacity / 100.0
     readonly property color borderColor: Qt.rgba(1, 1, 1, borderOpacity / 100.0)
 
     // ── State ───────────────────────────────────────────────────────────
@@ -1101,13 +1099,13 @@ ListModel { id: stockModel }
         }
     }
 
+    signal requestUpdateCheck
+
     StockSettingsDialog {
         id: stockSettings
-        onCheckUpdatesRequested: {
-            // Bubble to App.qml (parent Item) which owns UpdateChecker
-            if (root.parent && root.parent.checkForUpdatesNow)
-                root.parent.checkForUpdatesNow()
-        }
+        parent: root.contentItem
+        anchors.centerIn: root.contentItem
+        onCheckUpdatesRequested: root.requestUpdateCheck()
     }
 
     function setUpdateCheckStatus(text) {

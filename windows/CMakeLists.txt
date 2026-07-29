@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(TickerLens VERSION 1.6.4 LANGUAGES CXX)
+project(TickerLens VERSION 1.6.5 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -47,7 +47,7 @@ if(WIN32)
     )
     # Custom WinMain in win_main.cpp — skip Qt EntryPoint which needs __argc
     target_compile_definitions(TickerLens PRIVATE QT_NO_ENTRYPOINT=1)
-    target_link_libraries(TickerLens PRIVATE dwmapi shell32)
+    target_link_libraries(TickerLens PRIVATE dwmapi shell32 gdi32)
     # windres needs to find app.ico next to app.rc
     set_source_files_properties(assets/app.rc PROPERTIES
         OBJECT_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/assets/app.ico"

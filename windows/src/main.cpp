@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
     QGuiApplication::setOrganizationName(QStringLiteral("TickerLens"));
     QGuiApplication::setOrganizationDomain(QStringLiteral("tickerlens.app"));
     QGuiApplication::setApplicationName(QStringLiteral("TickerLens"));
-    QGuiApplication::setApplicationVersion(QStringLiteral("1.6.4"));
+    QGuiApplication::setApplicationVersion(QStringLiteral("1.6.5"));
 
     QApplication app(argc, argv);
     app.setQuitOnLastWindowClosed(false);

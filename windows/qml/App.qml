@@ -77,6 +77,9 @@ Item {
         function onVisibleChanged() {
             AppSettings.showStockWindow = stockWin.visible
         }
+        function onRequestUpdateCheck() {
+            checkForUpdatesNow()
+        }
     }
     Connections {
         target: newsWin
@@ -105,7 +108,7 @@ Item {
             updateDlg.installProgress = 0
             updateDlg.installStatus = ""
             setStockVisible(true)
-            updateDlg.open()
+            Qt.callLater(function() { updateDlg.open() })
         }
         onCheckFinished: function(available) {
             if (!available)

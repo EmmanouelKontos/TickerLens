@@ -267,26 +267,42 @@ void PlatformUtils::applyGlassEffect(QObject *window) const
     if (!hwnd)
         return;
 
-    // Tray-only: hide from taskbar (WS_EX_TOOLWINDOW, clear APPWINDOW)
+    // Tray-only: hide from taskbar
     LONG_PTR ex = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
     ex |= WS_EX_TOOLWINDOW;
     ex &= ~WS_EX_APPWINDOW;
     SetWindowLongPtrW(hwnd, GWL_EXSTYLE, ex);
-    SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
-                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOACTIVATE);
+
+    // Never leave sticky topmost unless the Qt flag is set
+    const bool topMost = qw->flags().testFlag(Qt::WindowStaysOnTopHint);
+    SetWindowPos(hwnd, topMost ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_FRAMECHANGED);
 
     BOOL dark = TRUE;
     DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &dark, sizeof(dark));
 
-    // Windows 11 rounded corners
+    // Prefer OS rounded corners (Win11); also set a round window region as fallback
     const int corner = DWMWCP_ROUND;
     DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &corner, sizeof(corner));
 
-    // Acrylic backdrop — desktop blurs through like KDE Plasma glass
+    const qreal dpr = qw->devicePixelRatio();
+    const int w = int(qw->width() * dpr);
+    const int h = int(qw->height() * dpr);
+    int radLogical = qw->property("cornerRadius").toInt();
+    if (radLogical < 12)
+        radLogical = 22;
+    const int rad = int(radLogical * dpr);
+    if (w > 8 && h > 8) {
+        // CreateRoundRectRgn: ellipse width/height = 2*radius
+        HRGN rgn = CreateRoundRectRgn(0, 0, w + 1, h + 1, rad * 2, rad * 2);
+        if (rgn)
+            SetWindowRgn(hwnd, rgn, TRUE); // system owns rgn after success
+    }
+
+    // Acrylic blur (desktop shows through)
     const int backdrop = DWMSBT_TRANSIENTWINDOW;
     DwmSetWindowAttribute(hwnd, DWMWA_SYSTEMBACKDROP_TYPE, &backdrop, sizeof(backdrop));
 
-    // Transparent client so acrylic is visible; QML panel supplies the tint
     qw->setColor(Qt::transparent);
 #else
     Q_UNUSED(window);
@@ -301,8 +317,6 @@ void PlatformUtils::showWindow(QObject *window) const
     qw->setVisibility(QWindow::Windowed);
     qw->setVisible(true);
     qw->show();
-    qw->raise();
-    qw->requestActivate();
 #ifdef Q_OS_WIN
     qw->create();
     const HWND hwnd = reinterpret_cast<HWND>(qw->winId());
@@ -310,17 +324,22 @@ void PlatformUtils::showWindow(QObject *window) const
         return;
     if (IsIconic(hwnd))
         ShowWindow(hwnd, SW_RESTORE);
-    else
-        ShowWindow(hwnd, SW_SHOWNA);
     ShowWindow(hwnd, SW_SHOW);
-    // Force Z-order; respect always-on-top flag from the QML window
+
+    // Respect always-on-top setting — default is normal stacking
     const bool topMost = qw->flags().testFlag(Qt::WindowStaysOnTopHint);
-    SetWindowPos(hwnd, topMost ? HWND_TOPMOST : HWND_TOP, 0, 0, 0, 0,
+    SetWindowPos(hwnd, topMost ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0,
                  SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-    // Allow SetForegroundWindow to succeed when called from tray
+    if (!topMost) {
+        // Bring above peers without locking on top of everything
+        SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0,
+                     SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+    }
     AllowSetForegroundWindow(ASFW_ANY);
     SetForegroundWindow(hwnd);
-    BringWindowToTop(hwnd);
+#else
+    qw->raise();
+    qw->requestActivate();
 #endif
     applyGlassEffect(qw);
 }

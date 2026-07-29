@@ -117,7 +117,7 @@ void AppSettings::setUseCustomColors(bool v) { set(QStringLiteral("useCustomColo
 int AppSettings::glassOpacity() const { return get(QStringLiteral("glassOpacity"), 68).toInt(); }
 void AppSettings::setGlassOpacity(int v) { set(QStringLiteral("glassOpacity"), v); }
 
-QColor AppSettings::cardColor() const { return get(QStringLiteral("cardColor"), QColor(QStringLiteral("#1a1a22"))).value<QColor>(); }
+QColor AppSettings::cardColor() const { return get(QStringLiteral("cardColor"), QColor(QStringLiteral("#14141c"))).value<QColor>(); }
 void AppSettings::setCardColor(const QColor &v) { set(QStringLiteral("cardColor"), v); }
 QColor AppSettings::textColor() const { return get(QStringLiteral("textColor"), QColor(QStringLiteral("#f2f2f7"))).value<QColor>(); }
 void AppSettings::setTextColor(const QColor &v) { set(QStringLiteral("textColor"), v); }
@@ -134,7 +134,7 @@ void AppSettings::setAccentColor(const QColor &v) { set(QStringLiteral("accentCo
 
 int AppSettings::borderOpacity() const { return get(QStringLiteral("borderOpacity"), 16).toInt(); }
 void AppSettings::setBorderOpacity(int v) { set(QStringLiteral("borderOpacity"), v); }
-int AppSettings::cornerRadius() const { return get(QStringLiteral("cornerRadius"), 20).toInt(); }
+int AppSettings::cornerRadius() const { return get(QStringLiteral("cornerRadius"), 22).toInt(); }
 void AppSettings::setCornerRadius(int v) { set(QStringLiteral("cornerRadius"), v); }
 
 QString AppSettings::portfolioJson() const { return get(QStringLiteral("portfolioJson"), QStringLiteral("{}")).toString(); }
@@ -172,7 +172,7 @@ QString AppSettings::deepseekApiKey() const { return get(QStringLiteral("deepsee
 void AppSettings::setDeepseekApiKey(const QString &v) { set(QStringLiteral("deepseekApiKey"), v); }
 QString AppSettings::deepseekModel() const { return get(QStringLiteral("deepseekModel"), QStringLiteral("deepseek-chat")).toString(); }
 void AppSettings::setDeepseekModel(const QString &v) { set(QStringLiteral("deepseekModel"), v); }
-bool AppSettings::alwaysOnTop() const { return get(QStringLiteral("alwaysOnTop"), true).toBool(); }
+bool AppSettings::alwaysOnTop() const { return get(QStringLiteral("alwaysOnTop"), false).toBool(); }
 void AppSettings::setAlwaysOnTop(bool v) { set(QStringLiteral("alwaysOnTop"), v); }
 bool AppSettings::showStockWindow() const { return get(QStringLiteral("showStockWindow"), true).toBool(); }
 void AppSettings::setShowStockWindow(bool v) { set(QStringLiteral("showStockWindow"), v); }
@@ -188,5 +188,5 @@ void AppSettings::setDismissedUpdateVersion(const QString &v) { set(QStringLiter
 QString AppSettings::appVersion() const
 {
     const QString v = QCoreApplication::applicationVersion();
-    return v.isEmpty() ? QStringLiteral("1.6.4") : v;
+    return v.isEmpty() ? QStringLiteral("1.6.5") : v;
 }

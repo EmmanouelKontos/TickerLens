@@ -6,11 +6,13 @@ Dialog {
     id: dlg
     title: "TickerLens Settings"
     modal: true
-    anchors.centerIn: undefined
-    width: 420
-    height: 560
+    anchors.centerIn: parent
+    width: Math.min(440, (parent ? parent.width : 480) - 24)
+    height: Math.min(560, (parent ? parent.height : 600) - 24)
     standardButtons: Dialog.Ok | Dialog.Cancel
+    closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
+    // Bubble to StockWindow / App
     signal checkUpdatesRequested
 
     function setUpdateStatus(text) {
@@ -28,8 +30,9 @@ Dialog {
         AppSettings.portfolioJson = portfolioField.text
         AppSettings.alertsJson = alertsField.text
         AppSettings.alwaysOnTop = alwaysOnTop.checked
-        AppSettings.glassOpacity = glassSlider.value
+        AppSettings.glassOpacity = Math.round(glassSlider.value)
         AppSettings.checkForUpdates = checkUpdates.checked
+        AppSettings.cornerRadius = Math.round(radiusSlider.value)
         AppSettings.sortMode = sortCombo.currentText === "Alphabetical" ? "alpha"
                            : sortCombo.currentText === "Top gainers" ? "gainers"
                            : sortCombo.currentText === "Top losers" ? "losers"
@@ -48,8 +51,11 @@ Dialog {
         showPortfolio.checked = AppSettings.showPortfolio
         portfolioField.text = AppSettings.portfolioJson
         alertsField.text = AppSettings.alertsJson
-        alwaysOnTop.checked = AppSettings.alwaysOnTop
+        alwaysOnTop.checked = !!AppSettings.alwaysOnTop
         glassSlider.value = AppSettings.glassOpacity
+        radiusSlider.value = AppSettings.cornerRadius || 22
+        glassValueLab.text = Math.round(glassSlider.value) + "%"
+        radiusValueLab.text = Math.round(radiusSlider.value) + "px"
         checkUpdates.checked = AppSettings.checkForUpdates !== false
         updateStatus.text = "v" + (AppSettings.appVersion || "")
         var sm = AppSettings.sortMode
@@ -60,7 +66,7 @@ Dialog {
         clip: true
         ColumnLayout {
             width: dlg.availableWidth
-            spacing: 8
+            spacing: 10
 
             Label { text: "Symbols (comma-separated)"; font.bold: true }
             TextArea {
@@ -87,27 +93,73 @@ Dialog {
             CheckBox { id: showEarnings; text: "Show next earnings" }
             CheckBox { id: showSparks; text: "Show sparklines" }
             CheckBox { id: showPortfolio; text: "Show portfolio P/L" }
-            CheckBox { id: alwaysOnTop; text: "Always on top" }
+            CheckBox {
+                id: alwaysOnTop
+                text: "Always on top"
+            }
+            Label {
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                opacity: 0.65
+                font.pixelSize: 11
+                text: "Off by default — widgets stack like normal windows."
+            }
+
+            Label { text: "Appearance"; font.bold: true }
+            RowLayout {
+                Layout.fillWidth: true
+                Label { text: "Glass opacity"; Layout.fillWidth: true }
+                Label { id: glassValueLab; text: "68%"; opacity: 0.8 }
+            }
+            Slider {
+                id: glassSlider
+                from: 25
+                to: 95
+                stepSize: 1
+                Layout.fillWidth: true
+                // Live preview while dragging
+                onMoved: {
+                    AppSettings.glassOpacity = Math.round(value)
+                    glassValueLab.text = Math.round(value) + "%"
+                }
+            }
+            Label {
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                opacity: 0.65
+                font.pixelSize: 11
+                text: "Lower = more frosted (see desktop through). Higher = more solid."
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                Label { text: "Corner radius"; Layout.fillWidth: true }
+                Label { id: radiusValueLab; text: "22px"; opacity: 0.8 }
+            }
+            Slider {
+                id: radiusSlider
+                from: 12
+                to: 36
+                stepSize: 1
+                Layout.fillWidth: true
+                onMoved: {
+                    AppSettings.cornerRadius = Math.round(value)
+                    radiusValueLab.text = Math.round(value) + "px"
+                }
+            }
 
             Label { text: "Updates"; font.bold: true }
             CheckBox {
                 id: checkUpdates
                 text: "Check for updates (GitHub Releases)"
             }
-            Label {
-                Layout.fillWidth: true
-                wrapMode: Text.WordWrap
-                opacity: 0.7
-                font.pixelSize: 11
-                text: "When enabled, checks once a day for new releases. You get a popup to install (download from GitHub and apply) or open the release page."
-            }
             RowLayout {
                 Layout.fillWidth: true
                 Button {
                     text: "Check now"
-                    enabled: checkUpdates.checked
                     onClicked: {
                         AppSettings.checkForUpdates = true
+                        AppSettings.sync()
                         updateStatus.text = "Checking…"
                         dlg.checkUpdatesRequested()
                     }
@@ -115,20 +167,18 @@ Dialog {
                 Label {
                     id: updateStatus
                     Layout.fillWidth: true
-                    opacity: 0.8
+                    opacity: 0.85
                     font.pixelSize: 11
+                    wrapMode: Text.WordWrap
                     text: "v" + (AppSettings.appVersion || "")
                 }
             }
-
-            Label { text: "Glass opacity" }
-            Slider { id: glassSlider; from: 20; to: 100; stepSize: 1; Layout.fillWidth: true }
 
             Label { text: "Portfolio JSON {\"AAPL\":{\"shares\":10,\"cost\":150}}" }
             TextArea {
                 id: portfolioField
                 Layout.fillWidth: true
-                Layout.preferredHeight: 60
+                Layout.preferredHeight: 56
                 font.family: "monospace"
                 font.pixelSize: 11
             }
@@ -137,7 +187,7 @@ Dialog {
             TextArea {
                 id: alertsField
                 Layout.fillWidth: true
-                Layout.preferredHeight: 60
+                Layout.preferredHeight: 56
                 font.family: "monospace"
                 font.pixelSize: 11
             }
