@@ -39,6 +39,8 @@
 #endif
 
 #include <QQuickWindow>
+#include <QWindow>
+#include <QColor>
 
 PlatformUtils::PlatformUtils(QObject *parent)
     : QObject(parent)
@@ -260,6 +262,8 @@ void PlatformUtils::applyGlassEffect(QObject *window) const
     auto *qw = qobject_cast<QQuickWindow *>(window);
     if (!qw)
         return;
+    // Ensure native handle exists before DWM calls
+    qw->create();
     const HWND hwnd = reinterpret_cast<HWND>(qw->winId());
     if (!hwnd)
         return;
@@ -267,16 +271,68 @@ void PlatformUtils::applyGlassEffect(QObject *window) const
     BOOL dark = TRUE;
     DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &dark, sizeof(dark));
 
-    // Windows 11: rounded corners + acrylic/mica backdrop
+    // Windows 11: rounded corners + acrylic/mica backdrop (best-effort)
     const int corner = DWMWCP_ROUND;
     DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &corner, sizeof(corner));
 
-    const int backdrop = DWMSBT_TRANSIENTWINDOW; // Acrylic — closer to frosted glass
+    const int backdrop = DWMSBT_TRANSIENTWINDOW; // Acrylic
     DwmSetWindowAttribute(hwnd, DWMWA_SYSTEMBACKDROP_TYPE, &backdrop, sizeof(backdrop));
 
-    // Keep Qt fill semi-transparent so backdrop shows through
-    qw->setColor(Qt::transparent);
+    // Do NOT force fully transparent — invisible windows on some GPUs/compositors.
+    // Keep a near-opaque dark base; QML glass rect provides the look.
+    if (qw->color().alpha() < 8)
+        qw->setColor(QColor(26, 26, 34, 242));
 #else
     Q_UNUSED(window);
 #endif
+}
+
+void PlatformUtils::showWindow(QObject *window) const
+{
+    auto *qw = qobject_cast<QQuickWindow *>(window);
+    if (!qw)
+        return;
+    qw->setVisibility(QWindow::Windowed);
+    qw->setVisible(true);
+    qw->show();
+    qw->raise();
+    qw->requestActivate();
+#ifdef Q_OS_WIN
+    qw->create();
+    const HWND hwnd = reinterpret_cast<HWND>(qw->winId());
+    if (!hwnd)
+        return;
+    if (IsIconic(hwnd))
+        ShowWindow(hwnd, SW_RESTORE);
+    else
+        ShowWindow(hwnd, SW_SHOWNA);
+    ShowWindow(hwnd, SW_SHOW);
+    // Force Z-order; respect always-on-top flag from the QML window
+    const bool topMost = qw->flags().testFlag(Qt::WindowStaysOnTopHint);
+    SetWindowPos(hwnd, topMost ? HWND_TOPMOST : HWND_TOP, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+    // Allow SetForegroundWindow to succeed when called from tray
+    AllowSetForegroundWindow(ASFW_ANY);
+    SetForegroundWindow(hwnd);
+    BringWindowToTop(hwnd);
+#endif
+    applyGlassEffect(qw);
+}
+
+void PlatformUtils::hideWindow(QObject *window) const
+{
+    auto *qw = qobject_cast<QQuickWindow *>(window);
+    if (!qw)
+        return;
+    qw->hide();
+#ifdef Q_OS_WIN
+    const HWND hwnd = reinterpret_cast<HWND>(qw->winId());
+    if (hwnd)
+        ShowWindow(hwnd, SW_HIDE);
+#endif
+}
+
+void PlatformUtils::bringToFront(QObject *window) const
+{
+    showWindow(window);
 }

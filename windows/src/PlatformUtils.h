@@ -33,4 +33,8 @@ public:
     Q_INVOKABLE QString joinPath(const QString &a, const QString &b) const;
     // Apply Windows 11 Mica/Acrylic (or no-op elsewhere). Pass a QQuickWindow from QML.
     Q_INVOKABLE void applyGlassEffect(QObject *window) const;
+    // Reliable show/hide for frameless windows (Windows needs HWND restore/foreground).
+    Q_INVOKABLE void showWindow(QObject *window) const;
+    Q_INVOKABLE void hideWindow(QObject *window) const;
+    Q_INVOKABLE void bringToFront(QObject *window) const;
 };

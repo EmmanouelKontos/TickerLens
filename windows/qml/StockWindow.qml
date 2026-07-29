@@ -11,7 +11,7 @@ GlassWindow {
     minimumHeight: 200
     title: "TickerLens"
     windowTitle: "Markets"
-    visible: AppSettings.showStockWindow
+    // Visibility is owned by App.qml (no binding fight with tray toggles)
 
     // ── Config bindings (AppSettings) ───────────────────────────────────
     readonly property string symbolsRaw: AppSettings.symbols

@@ -11,7 +11,7 @@ GlassWindow {
     minimumHeight: 220
     title: "TickerLens News"
     windowTitle: "News"
-    visible: AppSettings.showNewsWindow
+    // Visibility is owned by App.qml (no binding fight with tray toggles)
 
     readonly property bool useSharedWatchlist: AppSettings.useSharedWatchlist !== false
     readonly property string newsSymbolsRaw: AppSettings.newsSymbols

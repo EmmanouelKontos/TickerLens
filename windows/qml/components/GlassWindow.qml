@@ -2,13 +2,16 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Window
 
-// Frameless frosted “desktop widget” window for Windows 11 / desktop.
+// Frameless frosted desktop widget window.
 Window {
     id: win
-    color: "transparent"
+
+    // Solid dark base so the window is always visible on Windows (acrylic is optional).
+    color: Qt.rgba(cardColor.r, cardColor.g, cardColor.b, 0.97)
     flags: Qt.FramelessWindowHint | Qt.Window
            | (AppSettings.alwaysOnTop ? Qt.WindowStaysOnTopHint : 0)
     title: "TickerLens"
+    visible: false
 
     property alias glass: glassRect
     property string windowTitle: "TickerLens"
@@ -20,6 +23,32 @@ Window {
     property int cornerRadius: AppSettings.cornerRadius || 18
 
     default property alias contentData: body.data
+
+    // Hide to tray instead of destroying when user clicks X (if any)
+    onClosing: function(close) {
+        close.accepted = false
+        Platform.hideWindow(win)
+    }
+
+    function showMe() {
+        // Keep on-screen if dragged off
+        if (x < -width + 40 || y < -20 || x > Screen.width - 40 || y > Screen.height - 40) {
+            x = Math.max(40, (Screen.width - width) / 2)
+            y = Math.max(40, (Screen.height - height) / 4)
+        }
+        Platform.showWindow(win)
+    }
+
+    function hideMe() {
+        Platform.hideWindow(win)
+    }
+
+    function toggleMe() {
+        if (visible)
+            hideMe()
+        else
+            showMe()
+    }
 
     // Soft drop shadow under the card
     Rectangle {
@@ -38,13 +67,11 @@ Window {
         anchors.fill: parent
         anchors.margins: 2
         radius: win.cornerRadius
-        // Slightly more translucent so Win11 acrylic shows through when available
-        color: Qt.rgba(win.cardColor.r, win.cardColor.g, win.cardColor.b, win.glassAlpha * 0.92)
+        color: Qt.rgba(win.cardColor.r, win.cardColor.g, win.cardColor.b, Math.max(0.85, win.glassAlpha))
         border.color: win.borderColor
         border.width: 1
         clip: true
 
-        // Top frost sheen
         Rectangle {
             anchors.left: parent.left
             anchors.right: parent.right
@@ -57,7 +84,6 @@ Window {
             }
         }
 
-        // Inner highlight lip
         Rectangle {
             anchors.fill: parent
             anchors.margins: 1
@@ -71,7 +97,6 @@ Window {
             anchors.fill: parent
             spacing: 0
 
-            // Title / drag bar
             Item {
                 id: titleBar
                 width: parent.width
@@ -100,13 +125,28 @@ Window {
                     opacity: 0.92
                 }
 
-                Row {
+                // Close → hide to tray
+                Rectangle {
                     anchors.right: parent.right
-                    anchors.rightMargin: 8
+                    anchors.rightMargin: 10
                     anchors.verticalCenter: parent.verticalCenter
-                    spacing: 4
-
-                    // Slot for extra header buttons via property (optional)
+                    width: 28
+                    height: 28
+                    radius: 8
+                    color: closeMa.containsMouse ? Qt.rgba(1, 0.3, 0.3, 0.35) : Qt.rgba(1, 1, 1, 0.08)
+                    Text {
+                        anchors.centerIn: parent
+                        text: "×"
+                        color: win.textColor
+                        font.pixelSize: 16
+                    }
+                    MouseArea {
+                        id: closeMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: win.hideMe()
+                    }
                 }
 
                 Rectangle {
@@ -128,7 +168,6 @@ Window {
         }
     }
 
-    // Edge resize (bottom-right grip)
     MouseArea {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
@@ -156,6 +195,11 @@ Window {
         }
     }
 
-    Component.onCompleted: Platform.applyGlassEffect(win)
-    onVisibleChanged: if (visible) Qt.callLater(function() { Platform.applyGlassEffect(win) })
+    Component.onCompleted: {
+        // Delay glass until first show (HWND ready)
+    }
+    onVisibleChanged: {
+        if (visible)
+            Qt.callLater(function() { Platform.applyGlassEffect(win) })
+    }
 }

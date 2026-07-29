@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.6.3
+
+- **Windows windows not showing**: tray worked but Markets/News never appeared — fixed show/hide via Win32 bring-to-front, solid window base, no binding fights
+- **Single instance**: second launch activates the existing app instead of starting another process
+
 ## 1.6.2
 
 - **Critical Windows fix**: app entry point called CRT `main` instead of Qt `qMain` (window never started)

@@ -9,7 +9,6 @@
 #include <QQuickStyle>
 #include <QDir>
 #include <QFile>
-#include <QFileInfo>
 #include <QStandardPaths>
 #include <QSystemTrayIcon>
 #include <QMenu>
@@ -18,6 +17,13 @@
 #include <QMessageBox>
 #include <QDateTime>
 #include <QTextStream>
+#include <QSharedMemory>
+#include <QLocalServer>
+#include <QLocalSocket>
+#include <QTimer>
+
+static const char *kIpcName = "TickerLens-ipc-v1";
+static const char *kLockName = "TickerLens-single-instance-v1";
 
 static QString logPath()
 {
@@ -47,22 +53,55 @@ static void ensureHelperScripts()
         QFile::copy(srcApp, dst);
 }
 
+// Notify the already-running instance to raise its windows.
+static bool activateExistingInstance()
+{
+    QLocalSocket sock;
+    sock.connectToServer(QString::fromLatin1(kIpcName));
+    if (!sock.waitForConnected(800))
+        return false;
+    sock.write("raise\n");
+    sock.flush();
+    sock.waitForBytesWritten(500);
+    sock.disconnectFromServer();
+    return true;
+}
+
 int main(int argc, char *argv[])
 {
     QGuiApplication::setOrganizationName(QStringLiteral("TickerLens"));
     QGuiApplication::setOrganizationDomain(QStringLiteral("tickerlens.app"));
     QGuiApplication::setApplicationName(QStringLiteral("TickerLens"));
-    QGuiApplication::setApplicationVersion(QStringLiteral("1.6.2"));
+    QGuiApplication::setApplicationVersion(QStringLiteral("1.6.3"));
 
     QApplication app(argc, argv);
     app.setQuitOnLastWindowClosed(false);
     QQuickStyle::setStyle(QStringLiteral("Basic"));
 
+    // ── Single instance ─────────────────────────────────────────────────
+    // QSharedMemory lock: create() fails if another process holds the key.
+    static QSharedMemory instanceLock(QString::fromLatin1(kLockName));
+    if (!instanceLock.create(1)) {
+        // Another instance is alive (or a crash left a stale lock — try activate)
+        if (activateExistingInstance()) {
+            logLine(QStringLiteral("second instance: activated existing and exiting"));
+            return 0;
+        }
+        // Stale lock after crash: attach+detach then recreate
+        if (instanceLock.attach())
+            instanceLock.detach();
+        if (!instanceLock.create(1)) {
+            // Still can't create — try activate once more
+            activateExistingInstance();
+            logLine(QStringLiteral("second instance: could not take lock, exiting"));
+            return 0;
+        }
+    }
+
     logLine(QStringLiteral("start v%1 dir=%2")
                 .arg(QCoreApplication::applicationVersion(),
                      QCoreApplication::applicationDirPath()));
 
-    // Ensure Qt finds plugins next to the exe (portable + installed)
     const QString appDir = QCoreApplication::applicationDirPath();
     QCoreApplication::addLibraryPath(appDir);
     QCoreApplication::addLibraryPath(QDir(appDir).filePath(QStringLiteral("plugins")));
@@ -107,6 +146,26 @@ int main(int argc, char *argv[])
     }
 
     logLine(QStringLiteral("QML loaded OK"));
+    QObject *root = engine.rootObjects().constFirst();
+
+    // IPC server: second instances send "raise"
+    QLocalServer::removeServer(QString::fromLatin1(kIpcName));
+    auto *ipc = new QLocalServer(&app);
+    if (!ipc->listen(QString::fromLatin1(kIpcName)))
+        logLine(QStringLiteral("IPC listen failed: ") + ipc->errorString());
+    QObject::connect(ipc, &QLocalServer::newConnection, &app, [ipc, root]() {
+        while (QLocalSocket *s = ipc->nextPendingConnection()) {
+            QObject::connect(s, &QLocalSocket::readyRead, s, [s, root]() {
+                const QByteArray msg = s->readAll();
+                if (msg.contains("raise") && root) {
+                    QMetaObject::invokeMethod(root, "raiseFromSecondInstance");
+                    logLine(QStringLiteral("raised from second instance request"));
+                }
+                s->disconnectFromServer();
+                s->deleteLater();
+            });
+        }
+    });
 
     // System tray
     QSystemTrayIcon tray;
@@ -124,8 +183,9 @@ int main(int argc, char *argv[])
     tray.setContextMenu(&trayMenu);
     if (QSystemTrayIcon::isSystemTrayAvailable())
         tray.show();
+    else
+        logLine(QStringLiteral("system tray not available"));
 
-    QObject *root = engine.rootObjects().constFirst();
     QObject::connect(actStock, &QAction::triggered, root, [root]() {
         QMetaObject::invokeMethod(root, "toggleStock");
     });
@@ -138,8 +198,11 @@ int main(int argc, char *argv[])
             QMetaObject::invokeMethod(root, "toggleStock");
     });
 
-    // Ensure at least Markets is visible on launch (avoid "nothing happens")
-    QMetaObject::invokeMethod(root, "ensureVisibleOnLaunch");
+    // Show windows after the event loop starts (HWND ready)
+    QTimer::singleShot(100, root, [root]() {
+        QMetaObject::invokeMethod(root, "ensureVisibleOnLaunch");
+        logLine(QStringLiteral("ensureVisibleOnLaunch requested"));
+    });
 
     return app.exec();
 }

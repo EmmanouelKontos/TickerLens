@@ -5,7 +5,7 @@ import QtQuick
 Item {
     id: root
 
-    property string currentVersion: AppSettings.appVersion || "1.6.2"
+    property string currentVersion: AppSettings.appVersion || "1.6.3"
     property bool enabled: AppSettings.checkForUpdates !== false
     property int checkIntervalMs: 24 * 60 * 60 * 1000
     property int startupDelayMs: 6000

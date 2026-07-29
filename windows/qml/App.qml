@@ -6,47 +6,70 @@ import "components"
 Item {
     id: root
 
+    function setStockVisible(on) {
+        if (on)
+            stockWin.showMe()
+        else
+            stockWin.hideMe()
+        AppSettings.showStockWindow = !!on
+        AppSettings.sync()
+    }
+
+    function setNewsVisible(on) {
+        if (on)
+            newsWin.showMe()
+        else
+            newsWin.hideMe()
+        AppSettings.showNewsWindow = !!on
+        AppSettings.sync()
+    }
+
     function toggleStock() {
-        stockWin.visible = !stockWin.visible
-        AppSettings.showStockWindow = stockWin.visible
-        AppSettings.sync()
+        setStockVisible(!stockWin.visible)
     }
+
     function toggleNews() {
-        newsWin.visible = !newsWin.visible
-        AppSettings.showNewsWindow = newsWin.visible
-        AppSettings.sync()
+        setNewsVisible(!newsWin.visible)
     }
+
     function checkForUpdatesNow() {
         updater.check(true)
     }
 
-    // Called from C++ after load — avoid a silent tray-only start
+    // Called from C++ after load — and when a second instance tries to start
     function ensureVisibleOnLaunch() {
         var showStock = AppSettings.showStockWindow !== false
-        var showNews = AppSettings.showNewsWindow !== false
+        var showNews = AppSettings.showNewsWindow === true
+        // Always show at least Markets so the user sees something
         if (!showStock && !showNews)
             showStock = true
-        stockWin.visible = showStock
-        newsWin.visible = showNews
-        AppSettings.showStockWindow = showStock
-        AppSettings.showNewsWindow = showNews
-        AppSettings.sync()
-        if (stockWin.visible) {
-            stockWin.raise()
-            stockWin.requestActivate()
-        }
+        setStockVisible(showStock)
+        setNewsVisible(showNews)
+        if (stockWin.visible)
+            stockWin.showMe()
+        else if (newsWin.visible)
+            newsWin.showMe()
+    }
+
+    function raiseFromSecondInstance() {
+        setStockVisible(true)
+        stockWin.showMe()
     }
 
     StockWindow {
         id: stockWin
         x: 80
         y: 80
+        width: 380
+        height: 560
     }
 
     NewsWindow {
         id: newsWin
         x: 500
         y: 80
+        width: 400
+        height: 520
     }
 
     Connections {
@@ -81,8 +104,7 @@ Item {
             updateDlg.installing = false
             updateDlg.installProgress = 0
             updateDlg.installStatus = ""
-            if (!stockWin.visible && !newsWin.visible)
-                stockWin.visible = true
+            setStockVisible(true)
             updateDlg.open()
         }
         onCheckFinished: function(available) {
@@ -142,13 +164,6 @@ Item {
             updateDlg.installStatus = message
             stockWin.setUpdateCheckStatus(message)
             Platform.showNotification("TickerLens", message)
-            // On Windows, app quits automatically to apply files
         }
-    }
-
-    Component.onCompleted: {
-        // Defaults: show markets; news follows setting
-        stockWin.visible = AppSettings.showStockWindow !== false
-        newsWin.visible = !!AppSettings.showNewsWindow
     }
 }
