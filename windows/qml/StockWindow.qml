@@ -10,6 +10,7 @@ GlassWindow {
     minimumWidth: 280
     minimumHeight: 200
     title: "TickerLens"
+    windowTitle: "Markets"
     visible: AppSettings.showStockWindow
 
     // ── Config bindings (AppSettings) ───────────────────────────────────
@@ -974,39 +975,16 @@ ListModel { id: stockModel }
             Layout.fillWidth: true
             spacing: 6
             Text {
-                text: "TickerLens"
-                color: root.textColor
-                font.pixelSize: 14
-                font.weight: Font.DemiBold
-            }
-            Text {
                 text: root.statusText
                 color: root.mutedTextColor
-                font.pixelSize: 10
+                font.pixelSize: 11
                 elide: Text.ElideRight
                 Layout.fillWidth: true
             }
-            Button {
-                text: "↻"
-                flat: true
-                implicitWidth: 28
-                implicitHeight: 28
-                onClicked: root.refresh(true)
-            }
-            Button {
-                text: "⚙"
-                flat: true
-                implicitWidth: 28
-                implicitHeight: 28
-                onClicked: stockSettings.open()
-            }
-            Button {
-                text: "✕"
-                flat: true
-                implicitWidth: 28
-                implicitHeight: 28
-                onClicked: root.visible = false
-            }
+            IconBtn { label: "↻"; tip: "Refresh"; onClicked: root.refresh(true) }
+            IconBtn { label: "⎘"; tip: "Copy watchlist"; onClicked: root.copyWatchlist() }
+            IconBtn { label: "⚙"; tip: "Settings"; onClicked: stockSettings.open() }
+            IconBtn { label: "✕"; tip: "Hide"; onClicked: root.visible = false }
         }
 
         Rectangle {

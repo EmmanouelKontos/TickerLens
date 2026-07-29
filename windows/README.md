@@ -1,54 +1,77 @@
 # TickerLens for Windows 11
 
-Desktop port of [TickerLens](https://github.com/EmmanouelKontos/TickerLens) with the same features as the Plasma widgets:
+Standalone **Windows 11 desktop app** — separate from the KDE Plasma widgets, same product goals:
 
-- **Markets** floating glass window (quotes, ATH, earnings, sparklines, portfolio, alerts)
-- **News** floating glass window (headlines + lexicon / DeepSeek sentiment)
-- System tray to show/hide either window
-- Settings dialogs, always-on-top option
-- Shared watchlist under app config dir
+- Frosted glass floating **Markets** + **News** panels  
+- Looks close to the Plasma widgets (dark glass, badges, sparklines, sentiment)  
+- System tray control  
+- Free market data (Yahoo + earnings API); optional DeepSeek for news ratings  
 
-Plugin IDs on Linux Plasma are unchanged; this is a **second product line** in `windows/`.
-
----
-
-## Requirements (build)
-
-- **CMake** ≥ 3.21  
-- **Qt 6.5+** with modules: Core, Gui, Qml, Quick, QuickControls2, Network, Widgets  
-- **C++17** compiler (MSVC 2019+, MinGW, or Clang)  
-- **Python 3** on PATH (only for optional DeepSeek ratings)
-
-### Windows install (Qt)
-
-1. Install [Qt Online Installer](https://www.qt.io/download) → Qt 6.x for MSVC or MinGW + Qt Quick.  
-2. Install CMake and a compiler (Visual Studio Build Tools recommended).  
-3. Open “x64 Native Tools Command Prompt for VS” or set `CMAKE_PREFIX_PATH` to your Qt kit, e.g.  
-   `C:\Qt\6.7.0\msvc2019_64`
+This is **not** a Plasma build. It is a Qt 6 app designed for Win11 (also runs on Linux for development).
 
 ---
 
-## Build
+## Why this approach?
 
-### Windows (PowerShell)
+| Approach | Verdict |
+|----------|---------|
+| Plasma QML on Windows | Not practical |
+| Share one QML plasmoid | Too many KDE-only APIs |
+| **Dedicated Qt 6 desktop app** | Best balance: glass UI, one `.exe`, full control |
+| Electron | Heavier, less “native widget” feel |
+
+---
+
+## Look & feel (Windows)
+
+- Frameless translucent windows with soft shadow  
+- **Windows 11 Acrylic / rounded corners** via DWM when available  
+- Drag title bar · resize grip · always-on-top option  
+- Tray icon: show/hide Markets or News, Quit  
+
+---
+
+## Build on Windows 11
+
+### 1. Install tools
+- [Visual Studio 2022](https://visualstudio.microsoft.com/) with **Desktop C++**  
+- [Qt 6.5+](https://www.qt.io/download) (MSVC kit) + **Qt Quick**  
+- [CMake](https://cmake.org/download/)  
+- [Python 3](https://www.python.org/) (for optional AI ratings)  
+- [Ninja](https://ninja-build.org/) (optional, recommended)
+
+### 2. Build
 
 ```powershell
 cd windows
-.\build-windows.ps1
+.\build-windows.ps1 -QtPath "C:\Qt\6.7.3\msvc2019_64"
 ```
 
-Or manually:
+Output: `build\Release\TickerLens.exe` (plus Qt DLLs via `windeployqt`).
+
+### 3. Run
+
+Double-click **TickerLens.exe** or:
 
 ```powershell
-cd windows
-cmake -B build -DCMAKE_PREFIX_PATH="C:\Qt\6.7.3\msvc2019_64" -G "Ninja"
-cmake --build build --config Release
-# Deploy Qt DLLs:
-windeployqt build\Release\TickerLens.exe
-copy scripts\rate_news.py build\Release\
+.\build\Release\TickerLens.exe
 ```
 
-### Linux (dev / CI smoke)
+Config lives in:
+
+```text
+%APPDATA%\TickerLens\TickerLens\
+```
+
+DeepSeek key (optional):
+
+```text
+%APPDATA%\TickerLens\TickerLens\deepseek.key
+```
+
+---
+
+## Build on Linux (dev smoke test)
 
 ```bash
 cd windows
@@ -59,40 +82,22 @@ cmake --build build -j
 
 ---
 
-## Run
+## Feature map
 
-```text
-TickerLens.exe
-```
-
-- Drag windows by the frosted background  
-- **↻** refresh · **⚙** settings · **✕** hide window  
-- Tray icon → show/hide Markets or News · Quit  
-- Config: `%APPDATA%\TickerLens\TickerLens\` (Windows) or `~/.config/TickerLens/` (Linux)
-
-DeepSeek key (optional):
-
-```text
-%APPDATA%\TickerLens\TickerLens\deepseek.key
-```
-
----
-
-## Feature parity
-
-| Feature | Plasma | Windows |
-|--------|:------:|:-------:|
-| Live quotes / ATH / sparklines | ✓ | ✓ |
-| Earnings | ✓ | ✓ |
-| Portfolio / alerts | ✓ | ✓ |
-| News + lexicon sentiment | ✓ | ✓ |
-| DeepSeek AI sentiment | ✓ | ✓ |
-| Glass UI | ✓ | ✓ (frameless translucent) |
-| Panel compact pill | ✓ | Tray compact |
-| Multi-monitor drag | ✓ | ✓ |
+| Feature | Windows app |
+|---------|:-----------:|
+| Live quotes, day change | ✓ |
+| Sparklines (hide when narrow) | ✓ |
+| ATH distance | ✓ |
+| Next earnings | ✓ |
+| Portfolio P/L | ✓ (JSON in settings) |
+| Alerts (desktop toast on Win11) | ✓ |
+| News + lexicon / DeepSeek | ✓ |
+| Glass UI | ✓ |
+| Tray | ✓ (replaces panel pill) |
 
 ---
 
 ## License
 
-Same as the main project: **GNU GPL v3**. See root `LICENSE`.
+GNU GPL v3 — same as the main TickerLens repository.

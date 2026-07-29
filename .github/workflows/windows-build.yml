@@ -1,0 +1,52 @@
+name: Windows build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "windows/**"
+      - ".github/workflows/windows-build.yml"
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.7.3"
+          host: windows
+          target: desktop
+          arch: win64_msvc2019_64
+          modules: "qtshadertools"
+          cache: true
+
+      - name: Configure & build
+        shell: pwsh
+        run: |
+          cd windows
+          cmake -B build -DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR" -DCMAKE_BUILD_TYPE=Release -G "Ninja"
+          cmake --build build --config Release
+
+      - name: Deploy
+        shell: pwsh
+        run: |
+          $exe = "windows/build/TickerLens.exe"
+          if (-not (Test-Path $exe)) { $exe = "windows/build/Release/TickerLens.exe" }
+          windeployqt --qmldir windows/qml $exe
+          Copy-Item windows/scripts/rate_news.py (Split-Path $exe -Parent)
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TickerLens-Windows
+          path: |
+            windows/build/TickerLens.exe
+            windows/build/*.dll
+            windows/build/**/*
+            !windows/build/CMakeFiles/**
+            !windows/build/**/*.obj
+            !windows/build/**/*.cpp
+          if-no-files-found: warn

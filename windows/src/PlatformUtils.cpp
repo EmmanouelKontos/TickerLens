@@ -17,7 +17,28 @@
 
 #ifdef Q_OS_WIN
 #  include <windows.h>
+#  include <dwmapi.h>
+#  ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
+#    define DWMWA_USE_IMMERSIVE_DARK_MODE 20
+#  endif
+#  ifndef DWMWA_SYSTEMBACKDROP_TYPE
+#    define DWMWA_SYSTEMBACKDROP_TYPE 38
+#  endif
+#  ifndef DWMWA_WINDOW_CORNER_PREFERENCE
+#    define DWMWA_WINDOW_CORNER_PREFERENCE 33
+#  endif
+#  ifndef DWMWCP_ROUND
+#    define DWMWCP_ROUND 2
+#  endif
+#  ifndef DWMSBT_MAINWINDOW
+#    define DWMSBT_MAINWINDOW 2 /* Mica */
+#  endif
+#  ifndef DWMSBT_TRANSIENTWINDOW
+#    define DWMSBT_TRANSIENTWINDOW 3 /* Acrylic */
+#  endif
 #endif
+
+#include <QQuickWindow>
 
 PlatformUtils::PlatformUtils(QObject *parent)
     : QObject(parent)
@@ -227,4 +248,33 @@ bool PlatformUtils::isScreenLocked() const
 QString PlatformUtils::joinPath(const QString &a, const QString &b) const
 {
     return QDir(a).filePath(b);
+}
+
+void PlatformUtils::applyGlassEffect(QObject *window) const
+{
+    if (!window)
+        return;
+#ifdef Q_OS_WIN
+    auto *qw = qobject_cast<QQuickWindow *>(window);
+    if (!qw)
+        return;
+    const HWND hwnd = reinterpret_cast<HWND>(qw->winId());
+    if (!hwnd)
+        return;
+
+    BOOL dark = TRUE;
+    DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &dark, sizeof(dark));
+
+    // Windows 11: rounded corners + acrylic/mica backdrop
+    const int corner = DWMWCP_ROUND;
+    DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &corner, sizeof(corner));
+
+    const int backdrop = DWMSBT_TRANSIENTWINDOW; // Acrylic — closer to frosted glass
+    DwmSetWindowAttribute(hwnd, DWMWA_SYSTEMBACKDROP_TYPE, &backdrop, sizeof(backdrop));
+
+    // Keep Qt fill semi-transparent so backdrop shows through
+    qw->setColor(Qt::transparent);
+#else
+    Q_UNUSED(window);
+#endif
 }

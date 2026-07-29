@@ -10,6 +10,7 @@ GlassWindow {
     minimumWidth: 300
     minimumHeight: 220
     title: "TickerLens News"
+    windowTitle: "News"
     visible: AppSettings.showNewsWindow
 
     readonly property bool useSharedWatchlist: AppSettings.useSharedWatchlist !== false
@@ -395,22 +396,17 @@ GlassWindow {
 
         RowLayout {
             Layout.fillWidth: true
-            Text {
-                text: "TickerLens News"
-                color: root.textColor
-                font.pixelSize: 14
-                font.weight: Font.DemiBold
-            }
+            spacing: 6
             Text {
                 text: root.statusText
                 color: root.mutedTextColor
-                font.pixelSize: 10
+                font.pixelSize: 11
                 elide: Text.ElideRight
                 Layout.fillWidth: true
             }
-            Button { text: "↻"; flat: true; implicitWidth: 28; implicitHeight: 28; onClicked: root.refresh(true) }
-            Button { text: "⚙"; flat: true; implicitWidth: 28; implicitHeight: 28; onClicked: newsSettings.open() }
-            Button { text: "✕"; flat: true; implicitWidth: 28; implicitHeight: 28; onClicked: root.visible = false }
+            IconBtn { label: "↻"; tip: "Refresh"; onClicked: root.refresh(true) }
+            IconBtn { label: "⚙"; tip: "Settings"; onClicked: newsSettings.open() }
+            IconBtn { label: "✕"; tip: "Hide"; onClicked: root.visible = false }
         }
         Rectangle { Layout.fillWidth: true; height: 1; color: Qt.rgba(1,1,1,0.08) }
 

@@ -35,6 +35,7 @@ if(WIN32)
         WIN32_EXECUTABLE TRUE
         OUTPUT_NAME "TickerLens"
     )
+    target_link_libraries(TickerLens PRIVATE dwmapi)
 endif()
 
 install(TARGETS TickerLens

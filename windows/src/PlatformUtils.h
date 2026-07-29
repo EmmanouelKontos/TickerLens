@@ -31,4 +31,6 @@ public:
     Q_INVOKABLE bool isOnBattery() const;
     Q_INVOKABLE bool isScreenLocked() const;
     Q_INVOKABLE QString joinPath(const QString &a, const QString &b) const;
+    // Apply Windows 11 Mica/Acrylic (or no-op elsewhere). Pass a QQuickWindow from QML.
+    Q_INVOKABLE void applyGlassEffect(QObject *window) const;
 };
