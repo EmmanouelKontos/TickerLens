@@ -28,6 +28,10 @@ venv/
 *.zip
 dist/
 build/
+windows/build/
+**/CMakeFiles/
+**/CMakeCache.txt
+**/*.user
 
 # Git / tooling
 .grok/

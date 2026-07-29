@@ -6,6 +6,7 @@
 - Remove dead UI files (`FullView.qml`, `StockRow.qml`)
 - Security: hardened DeepSeek helper, gitignore secrets, SECURITY.md
 - Docs: full README for the suite
+- **Windows 11 desktop port** (`windows/`): Qt 6 dual glass windows, tray, same market/news features
 
 ## 1.4.x
 

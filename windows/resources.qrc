@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/App.qml</file>
+        <file>qml/StockWindow.qml</file>
+        <file>qml/NewsWindow.qml</file>
+        <file>qml/components/StockDelegate.qml</file>
+        <file>qml/components/GlassWindow.qml</file>
+        <file>qml/components/StockSettingsDialog.qml</file>
+        <file>qml/components/NewsSettingsDialog.qml</file>
+        <file>scripts/rate_news.py</file>
+    </qresource>
+</RCC>
