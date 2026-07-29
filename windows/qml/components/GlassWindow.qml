@@ -2,36 +2,36 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Window
 
-// Frameless frosted desktop widget window.
+// Frameless frosted-glass desktop widget (KDE-like acrylic on Windows 11).
 Window {
     id: win
 
-    // Solid dark base so the window is always visible on Windows (acrylic is optional).
-    color: Qt.rgba(cardColor.r, cardColor.g, cardColor.b, 0.97)
-    flags: Qt.FramelessWindowHint | Qt.Window
+    // Transparent so system acrylic/blur shows through (Platform.applyGlassEffect).
+    color: "transparent"
+    // Tool window style: stays out of the taskbar (tray-only app).
+    flags: Qt.FramelessWindowHint | Qt.Tool
            | (AppSettings.alwaysOnTop ? Qt.WindowStaysOnTopHint : 0)
     title: "TickerLens"
     visible: false
 
     property alias glass: glassRect
     property string windowTitle: "TickerLens"
-    property real glassAlpha: (AppSettings.glassOpacity || 72) / 100.0
+    // Match Plasma default ~68% glass; lower = more frosted/see-through
+    property real glassAlpha: Math.min(0.82, Math.max(0.35, (AppSettings.glassOpacity || 68) / 100.0))
     property color cardColor: AppSettings.cardColor
     property color textColor: AppSettings.textColor
     property color mutedColor: AppSettings.mutedTextColor
-    property color borderColor: Qt.rgba(1, 1, 1, (AppSettings.borderOpacity || 18) / 100.0)
-    property int cornerRadius: AppSettings.cornerRadius || 18
+    property color borderColor: Qt.rgba(1, 1, 1, Math.max(0.12, (AppSettings.borderOpacity || 16) / 100.0))
+    property int cornerRadius: AppSettings.cornerRadius || 20
 
     default property alias contentData: body.data
 
-    // Hide to tray instead of destroying when user clicks X (if any)
     onClosing: function(close) {
         close.accepted = false
         Platform.hideWindow(win)
     }
 
     function showMe() {
-        // Keep on-screen if dragged off
         if (x < -width + 40 || y < -20 || x > Screen.width - 40 || y > Screen.height - 40) {
             x = Math.max(40, (Screen.width - width) / 2)
             y = Math.max(40, (Screen.height - height) / 4)
@@ -50,47 +50,52 @@ Window {
             showMe()
     }
 
-    // Soft drop shadow under the card
+    // Soft ambient shadow (drawn in-window; real blur is OS acrylic behind)
     Rectangle {
         anchors.centerIn: parent
-        width: parent.width - 4
-        height: parent.height - 4
+        width: parent.width - 2
+        height: parent.height - 2
         radius: win.cornerRadius + 2
-        color: Qt.rgba(0, 0, 0, 0.35)
+        color: Qt.rgba(0, 0, 0, 0.28)
         z: -1
-        opacity: 0.55
-        anchors.verticalCenterOffset: 3
+        anchors.verticalCenterOffset: 2
+        opacity: 0.7
     }
 
+    // Frosted panel
     Rectangle {
         id: glassRect
         anchors.fill: parent
-        anchors.margins: 2
+        anchors.margins: 1
         radius: win.cornerRadius
-        color: Qt.rgba(win.cardColor.r, win.cardColor.g, win.cardColor.b, Math.max(0.85, win.glassAlpha))
+        // Semi-transparent tint — desktop blur (acrylic) shows through
+        color: Qt.rgba(win.cardColor.r, win.cardColor.g, win.cardColor.b, win.glassAlpha)
         border.color: win.borderColor
         border.width: 1
         clip: true
 
+        // Top frost sheen (KDE-like highlight)
         Rectangle {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
-            height: Math.min(90, parent.height * 0.32)
+            height: Math.min(100, parent.height * 0.38)
             radius: parent.radius
             gradient: Gradient {
-                GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.12) }
+                GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.14) }
+                GradientStop { position: 0.55; color: Qt.rgba(1, 1, 1, 0.03) }
                 GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.0) }
             }
         }
 
+        // Inner light rim
         Rectangle {
             anchors.fill: parent
             anchors.margins: 1
             radius: Math.max(0, parent.radius - 1)
             color: "transparent"
             border.width: 1
-            border.color: Qt.rgba(1, 1, 1, 0.05)
+            border.color: Qt.rgba(1, 1, 1, 0.08)
         }
 
         Column {
@@ -125,7 +130,6 @@ Window {
                     opacity: 0.92
                 }
 
-                // Close → hide to tray
                 Rectangle {
                     anchors.right: parent.right
                     anchors.rightMargin: 10
@@ -156,7 +160,7 @@ Window {
                     anchors.leftMargin: 12
                     anchors.rightMargin: 12
                     height: 1
-                    color: Qt.rgba(1, 1, 1, 0.07)
+                    color: Qt.rgba(1, 1, 1, 0.08)
                 }
             }
 
@@ -195,9 +199,6 @@ Window {
         }
     }
 
-    Component.onCompleted: {
-        // Delay glass until first show (HWND ready)
-    }
     onVisibleChanged: {
         if (visible)
             Qt.callLater(function() { Platform.applyGlassEffect(win) })

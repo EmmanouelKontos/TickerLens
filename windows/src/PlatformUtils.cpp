@@ -262,26 +262,32 @@ void PlatformUtils::applyGlassEffect(QObject *window) const
     auto *qw = qobject_cast<QQuickWindow *>(window);
     if (!qw)
         return;
-    // Ensure native handle exists before DWM calls
     qw->create();
     const HWND hwnd = reinterpret_cast<HWND>(qw->winId());
     if (!hwnd)
         return;
 
+    // Tray-only: hide from taskbar (WS_EX_TOOLWINDOW, clear APPWINDOW)
+    LONG_PTR ex = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+    ex |= WS_EX_TOOLWINDOW;
+    ex &= ~WS_EX_APPWINDOW;
+    SetWindowLongPtrW(hwnd, GWL_EXSTYLE, ex);
+    SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOACTIVATE);
+
     BOOL dark = TRUE;
     DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &dark, sizeof(dark));
 
-    // Windows 11: rounded corners + acrylic/mica backdrop (best-effort)
+    // Windows 11 rounded corners
     const int corner = DWMWCP_ROUND;
     DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &corner, sizeof(corner));
 
-    const int backdrop = DWMSBT_TRANSIENTWINDOW; // Acrylic
+    // Acrylic backdrop — desktop blurs through like KDE Plasma glass
+    const int backdrop = DWMSBT_TRANSIENTWINDOW;
     DwmSetWindowAttribute(hwnd, DWMWA_SYSTEMBACKDROP_TYPE, &backdrop, sizeof(backdrop));
 
-    // Do NOT force fully transparent — invisible windows on some GPUs/compositors.
-    // Keep a near-opaque dark base; QML glass rect provides the look.
-    if (qw->color().alpha() < 8)
-        qw->setColor(QColor(26, 26, 34, 242));
+    // Transparent client so acrylic is visible; QML panel supplies the tint
+    qw->setColor(Qt::transparent);
 #else
     Q_UNUSED(window);
 #endif

@@ -1,0 +1,2 @@
+// Windows executable icon (compiled with windres)
+IDI_ICON1 ICON "app.ico"

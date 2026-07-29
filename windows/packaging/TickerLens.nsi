@@ -2,10 +2,13 @@
 ; Build: makensis TickerLens.nsi  (with STAGE_DIR pointing at portable folder)
 
 !ifndef VERSION
-  !define VERSION "1.6.3"
+  !define VERSION "1.6.4"
 !endif
 !ifndef STAGE_DIR
   !define STAGE_DIR "..\..\dist\TickerLens-windows-x64-${VERSION}"
+!endif
+!ifndef APP_ICON
+  !define APP_ICON "..\assets\app.ico"
 !endif
 
 Name "TickerLens ${VERSION}"
@@ -22,8 +25,8 @@ SetCompressor /SOLID lzma
 !include "MUI2.nsh"
 
 !define MUI_ABORTWARNING
-!define MUI_ICON "${NSISDIR}\Contrib\Graphics\Icons\modern-install.ico"
-!define MUI_UNICON "${NSISDIR}\Contrib\Graphics\Icons\modern-uninstall.ico"
+!define MUI_ICON "${APP_ICON}"
+!define MUI_UNICON "${APP_ICON}"
 
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_DIRECTORY

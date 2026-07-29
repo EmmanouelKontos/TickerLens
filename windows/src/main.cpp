@@ -4,6 +4,7 @@
 
 #include <QApplication>
 #include <QIcon>
+#include <QPixmap>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickStyle>
@@ -72,11 +73,16 @@ int main(int argc, char *argv[])
     QGuiApplication::setOrganizationName(QStringLiteral("TickerLens"));
     QGuiApplication::setOrganizationDomain(QStringLiteral("tickerlens.app"));
     QGuiApplication::setApplicationName(QStringLiteral("TickerLens"));
-    QGuiApplication::setApplicationVersion(QStringLiteral("1.6.3"));
+    QGuiApplication::setApplicationVersion(QStringLiteral("1.6.4"));
 
     QApplication app(argc, argv);
     app.setQuitOnLastWindowClosed(false);
     QQuickStyle::setStyle(QStringLiteral("Basic"));
+
+    // App / tray icon (qrc)
+    const QIcon appIcon(QStringLiteral(":/assets/app.png"));
+    if (!appIcon.isNull())
+        app.setWindowIcon(appIcon);
 
     // ── Single instance ─────────────────────────────────────────────────
     // QSharedMemory lock: create() fails if another process holds the key.
@@ -167,13 +173,13 @@ int main(int argc, char *argv[])
         }
     });
 
-    // System tray
+    // System tray (primary UI surface — windows are tool windows, not taskbar apps)
     QSystemTrayIcon tray;
     tray.setToolTip(QStringLiteral("TickerLens"));
-    tray.setIcon(app.windowIcon().isNull()
-                     ? QIcon::fromTheme(QStringLiteral("office-chart-line"),
-                                        app.style()->standardIcon(QStyle::SP_ComputerIcon))
-                     : app.windowIcon());
+    tray.setIcon(!appIcon.isNull()
+                     ? appIcon
+                     : QIcon::fromTheme(QStringLiteral("office-chart-line"),
+                                        app.style()->standardIcon(QStyle::SP_ComputerIcon)));
 
     QMenu trayMenu;
     QAction *actStock = trayMenu.addAction(QStringLiteral("Show / Hide Markets"));

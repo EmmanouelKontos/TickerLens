@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.4
+
+- **Frosted glass**: Windows 11 acrylic blur + translucent tint (closer to KDE Plasma)
+- **Tray-only**: widgets no longer appear on the taskbar (tool windows + WS_EX_TOOLWINDOW)
+- **App icon**: unique TickerLens chart/lens icon for tray, exe, and installer
+
 ## 1.6.3
 
 - **Windows windows not showing**: tray worked but Markets/News never appeared — fixed show/hide via Win32 bring-to-front, solid window base, no binding fights

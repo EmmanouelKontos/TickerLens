@@ -11,5 +11,7 @@
         <file>qml/components/UpdateChecker.qml</file>
         <file>qml/components/UpdateDialog.qml</file>
         <file>scripts/rate_news.py</file>
+        <file>assets/app.png</file>
+        <file>assets/app.ico</file>
     </qresource>
 </RCC>
