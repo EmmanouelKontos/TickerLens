@@ -7,6 +7,8 @@
 #include <QPixmap>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QQmlEngine>
+#include <QQmlError>
 #include <QQuickStyle>
 #include <QDir>
 #include <QFile>
@@ -73,7 +75,7 @@ int main(int argc, char *argv[])
     QGuiApplication::setOrganizationName(QStringLiteral("TickerLens"));
     QGuiApplication::setOrganizationDomain(QStringLiteral("tickerlens.app"));
     QGuiApplication::setApplicationName(QStringLiteral("TickerLens"));
-    QGuiApplication::setApplicationVersion(QStringLiteral("1.6.5"));
+    QGuiApplication::setApplicationVersion(QStringLiteral("1.6.6"));
 
     QApplication app(argc, argv);
     app.setQuitOnLastWindowClosed(false);
@@ -125,6 +127,10 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty(QStringLiteral("UpdateInstaller"), &updater);
 
     const QUrl url(QStringLiteral("qrc:/qml/App.qml"));
+    QObject::connect(&engine, &QQmlEngine::warnings, &app, [](const QList<QQmlError> &warnings) {
+        for (const QQmlError &e : warnings)
+            logLine(QStringLiteral("QML: ") + e.toString());
+    });
     QObject::connect(
         &engine, &QQmlApplicationEngine::objectCreationFailed,
         &app, []() {
@@ -133,8 +139,7 @@ int main(int argc, char *argv[])
                 nullptr,
                 QStringLiteral("TickerLens"),
                 QStringLiteral("Failed to load the UI.\n\n"
-                               "Try reinstalling from the latest GitHub release.\n"
-                               "Log: %1")
+                               "See log for QML errors:\n%1")
                     .arg(logPath()));
             QCoreApplication::exit(-1);
         },

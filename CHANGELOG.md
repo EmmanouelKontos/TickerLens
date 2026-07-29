@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.6.6
+
+- **Critical**: fix QML load failure (`onFlagsChanged` is invalid on Qt 6 Window — empty UI / reinstall dialog)
+- Log QML warnings to tickerlens.log for easier diagnosis
+
 ## 1.6.5
 
 - UI: real rounded corners (window region + larger radius), darker frosted panel

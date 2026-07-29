@@ -28,17 +28,18 @@ Window {
     default property alias contentData: body.data
 
     // Re-apply OS glass + round region when size changes
+    // Note: Window.flags has no change signal in Qt 6 — do not use onFlagsChanged
     onWidthChanged: if (visible) Platform.applyGlassEffect(win)
     onHeightChanged: if (visible) Platform.applyGlassEffect(win)
-    onFlagsChanged: if (visible) Platform.applyGlassEffect(win)
 
     Connections {
         target: AppSettings
         function onSettingsChanged() {
-            // force property re-read for opacity / colors
+            // force property re-read for opacity / colors / always-on-top
             glassOpacityPct = AppSettings.glassOpacity
+            // flags binding re-evaluates from AppSettings.alwaysOnTop automatically
             if (win.visible)
-                Platform.applyGlassEffect(win)
+                Qt.callLater(function() { Platform.applyGlassEffect(win) })
         }
     }
 
