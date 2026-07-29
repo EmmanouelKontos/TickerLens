@@ -71,7 +71,8 @@ Get installers from **[Releases](https://github.com/EmmanouelKontos/TickerLens/r
 
 | Platform | Asset | How |
 |----------|--------|-----|
-| **Windows 11** | `TickerLens-windows-x64-*.zip` | Extract → double-click **`Install.bat`** |
+| **Windows 11** | `TickerLens-windows-x64-*-setup.exe` | Run the installer (recommended) |
+| **Windows 11** | `TickerLens-windows-x64-*.zip` | Portable: extract → run **`TickerLens.exe`** (or `Install.bat`) |
 | **Linux Plasma 6** | `TickerLens-linux-plasma6-*.tar.gz` | Extract → `./install.sh` |
 
 ### From source (Linux Plasma)

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.1
+
+- **Windows fix**: rebuild with MinGW GCC / libstdc++ matching Qt (llvm/libc++ ABI mismatch crashed on start)
+- **Installer fix**: PowerShell script is ASCII-only (broken by em-dash encoding on Windows PowerShell 5.1)
+- **Windows setup.exe**: NSIS installer (`TickerLens-windows-x64-*-setup.exe`) installs to `%LOCALAPPDATA%\TickerLens`, Start Menu + Desktop shortcuts, uninstaller
+
 ## 1.6.0
 
 - **Check for updates** (Windows + Plasma): polls GitHub Releases once per day when enabled

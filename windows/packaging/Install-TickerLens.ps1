@@ -1,7 +1,9 @@
 # TickerLens Windows installer (portable)
 # Run from the extracted release folder:
-#   Right-click → Run with PowerShell
+#   Right-click -> Run with PowerShell
 #   or: powershell -ExecutionPolicy Bypass -File .\Install-TickerLens.ps1
+#
+# Keep this file ASCII-only so Windows PowerShell 5.1 always parses it.
 
 param(
     [string]$InstallDir = "$env:LOCALAPPDATA\TickerLens",
@@ -62,7 +64,7 @@ if (-not $NoStartMenu) {
     $s = $w.CreateShortcut($lnk)
     $s.TargetPath = $InstalledExe
     $s.WorkingDirectory = $InstallDir
-    $s.Description = "TickerLens — markets & news for Windows"
+    $s.Description = "TickerLens markets and news for Windows"
     $s.Save()
     Write-Host "Start Menu shortcut created."
 }
@@ -80,7 +82,7 @@ if (-not $NoDesktopShortcut) {
     Write-Host "Desktop shortcut created."
 }
 
-# Uninstaller helper
+# Uninstaller helper (ASCII-only)
 $un = @"
 `$dir = "$InstallDir"
 Remove-Item -LiteralPath (Join-Path `$env:APPDATA "Microsoft\Windows\Start Menu\Programs\TickerLens.lnk") -Force -ErrorAction SilentlyContinue
@@ -88,7 +90,8 @@ Remove-Item -LiteralPath (Join-Path ([Environment]::GetFolderPath('Desktop')) "T
 Remove-Item -LiteralPath `$dir -Recurse -Force -ErrorAction SilentlyContinue
 Write-Host "TickerLens removed."
 "@
-Set-Content -Path (Join-Path $InstallDir "Uninstall.ps1") -Value $un -Encoding UTF8
+# Windows PowerShell 5.1: UTF8 without BOM can break; use Unicode (UTF-16 LE) for the helper
+Set-Content -Path (Join-Path $InstallDir "Uninstall.ps1") -Value $un -Encoding Unicode
 
 Write-Host ""
 Write-Host "Installed successfully." -ForegroundColor Green
