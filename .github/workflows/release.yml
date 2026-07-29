@@ -131,10 +131,24 @@ jobs:
           Compress-Archive -Path $stage -DestinationPath $zip -Force
           Get-Item $zip | Format-List Name, Length, FullName
 
+          # Build a proper per-user setup executable (no administrator prompt).
+          choco install nsis -y --no-progress
+          $setup = "dist/TickerLens-windows-x64-$version-setup.exe"
+          makensis `
+            "/DVERSION=$version" `
+            "/DSTAGE_DIR=$((Resolve-Path $stage).Path)" `
+            "/DAPP_ICON=$((Resolve-Path 'windows/assets/app.ico').Path)" `
+            "/DOUTFILE=$((Join-Path (Resolve-Path dist).Path (Split-Path $setup -Leaf)))" `
+            windows/packaging/TickerLens.nsi
+          if (-not (Test-Path $setup)) { throw "Setup executable was not created" }
+          Get-Item $setup | Format-List Name, Length, FullName
+
       - uses: actions/upload-artifact@v4
         with:
           name: windows-portable
-          path: dist/*.zip
+          path: |
+            dist/*.zip
+            dist/*-setup.exe
 
   publish:
     needs: [linux-plasma, windows]
@@ -154,7 +168,7 @@ jobs:
           if [[ "$VERSION" != v* ]]; then VERSION="v$VERSION"; fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           mkdir -p release-assets
-          find artifacts -type f \( -name '*.zip' -o -name '*.tar.gz' \) -exec cp -v {} release-assets/ \;
+          find artifacts -type f \( -name '*.zip' -o -name '*.tar.gz' -o -name '*-setup.exe' \) -exec cp -v {} release-assets/ \;
           ls -lah release-assets/
 
           cat > release-notes.md << EOF
@@ -163,10 +177,9 @@ jobs:
           Free frosted-glass market widgets — **KDE Plasma 6** and **Windows 11**.
 
           ### Windows 11
-          1. Download **\`TickerLens-windows-x64-*.zip\`**
-          2. Extract the folder
-          3. Double-click **\`Install.bat\`** (or run \`TickerLens.exe\` portable)
-          4. Optional: install [VC++ Redistributable x64](https://aka.ms/vs/17/release/vc_redist.x64.exe) if the app fails to start
+          1. Download and run **\`TickerLens-windows-x64-*-setup.exe\`**
+          2. Or download the ZIP for a portable installation
+          3. Optional: install [VC++ Redistributable x64](https://aka.ms/vs/17/release/vc_redist.x64.exe) if the app fails to start
 
           ### Linux (KDE Plasma 6)
           1. Download **\`TickerLens-linux-plasma6-*.tar.gz\`**

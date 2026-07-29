@@ -36,6 +36,35 @@
 #  ifndef DWMSBT_TRANSIENTWINDOW
 #    define DWMSBT_TRANSIENTWINDOW 3 /* Acrylic */
 #  endif
+
+// SetWindowCompositionAttribute is the composition path that still works for
+// Qt's frameless, per-pixel-alpha tool windows. DWMWA_SYSTEMBACKDROP_TYPE alone
+// is frequently ignored for that window style.
+enum WINDOWCOMPOSITIONATTRIB {
+    WCA_ACCENT_POLICY = 19
+};
+
+enum ACCENT_STATE {
+    ACCENT_DISABLED = 0,
+    ACCENT_ENABLE_BLURBEHIND = 3,
+    ACCENT_ENABLE_ACRYLICBLURBEHIND = 4
+};
+
+struct ACCENT_POLICY {
+    ACCENT_STATE AccentState;
+    DWORD AccentFlags;
+    DWORD GradientColor; // AABBGGRR
+    DWORD AnimationId;
+};
+
+struct WINDOWCOMPOSITIONATTRIBDATA {
+    WINDOWCOMPOSITIONATTRIB Attrib;
+    PVOID pvData;
+    SIZE_T cbData;
+};
+
+using SetWindowCompositionAttributePtr =
+    BOOL(WINAPI *)(HWND, WINDOWCOMPOSITIONATTRIBDATA *);
 #endif
 
 #include <QQuickWindow>
@@ -281,27 +310,59 @@ void PlatformUtils::applyGlassEffect(QObject *window) const
     BOOL dark = TRUE;
     DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &dark, sizeof(dark));
 
-    // Prefer OS rounded corners (Win11); also set a round window region as fallback
-    const int corner = DWMWCP_ROUND;
-    DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &corner, sizeof(corner));
+    // Extend glass through the whole client area. This also preserves the DWM
+    // shadow, unlike forcing a window region on Windows 11.
+    const MARGINS margins{-1, -1, -1, -1};
+    DwmExtendFrameIntoClientArea(hwnd, &margins);
 
-    const qreal dpr = qw->devicePixelRatio();
-    const int w = int(qw->width() * dpr);
-    const int h = int(qw->height() * dpr);
-    int radLogical = qw->property("cornerRadius").toInt();
-    if (radLogical < 12)
-        radLogical = 22;
-    const int rad = int(radLogical * dpr);
-    if (w > 8 && h > 8) {
-        // CreateRoundRectRgn: ellipse width/height = 2*radius
-        HRGN rgn = CreateRoundRectRgn(0, 0, w + 1, h + 1, rad * 2, rad * 2);
-        if (rgn)
-            SetWindowRgn(hwnd, rgn, TRUE); // system owns rgn after success
+    // Prefer native Windows 11 rounded corners. Use a region only on systems
+    // where the corner preference attribute is unavailable.
+    const int corner = DWMWCP_ROUND;
+    const HRESULT cornerResult =
+        DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE,
+                              &corner, sizeof(corner));
+    if (FAILED(cornerResult)) {
+        const qreal dpr = qw->devicePixelRatio();
+        const int w = int(qw->width() * dpr);
+        const int h = int(qw->height() * dpr);
+        int radLogical = qw->property("cornerRadius").toInt();
+        if (radLogical < 12)
+            radLogical = 22;
+        const int rad = int(radLogical * dpr);
+        if (w > 8 && h > 8) {
+            HRGN rgn = CreateRoundRectRgn(0, 0, w + 1, h + 1,
+                                          rad * 2, rad * 2);
+            if (rgn && !SetWindowRgn(hwnd, rgn, TRUE))
+                DeleteObject(rgn);
+        }
+    } else {
+        // Clear a region left by an older build so DWM can draw its shadow.
+        SetWindowRgn(hwnd, nullptr, TRUE);
     }
 
-    // Acrylic blur (desktop shows through)
+    // Ask Windows 11 for its native transient acrylic backdrop.
     const int backdrop = DWMSBT_TRANSIENTWINDOW;
     DwmSetWindowAttribute(hwnd, DWMWA_SYSTEMBACKDROP_TYPE, &backdrop, sizeof(backdrop));
+
+    // Qt transparent tool windows do not consistently receive the system
+    // backdrop. Apply Acrylic Blur Behind to the actual HWND as the dependable
+    // composition path (Windows 10 1803+ and Windows 11).
+    const HMODULE user32 = GetModuleHandleW(L"user32.dll");
+    const auto setComposition = reinterpret_cast<SetWindowCompositionAttributePtr>(
+        GetProcAddress(user32, "SetWindowCompositionAttribute"));
+    if (setComposition) {
+        ACCENT_POLICY policy{};
+        policy.AccentState = ACCENT_ENABLE_ACRYLICBLURBEHIND;
+        policy.AccentFlags = 2; // draw the subtle inner border
+        policy.GradientColor = 0xB8201818; // translucent warm charcoal
+        WINDOWCOMPOSITIONATTRIBDATA data{
+            WCA_ACCENT_POLICY, &policy, sizeof(policy)
+        };
+        if (!setComposition(hwnd, &data)) {
+            policy.AccentState = ACCENT_ENABLE_BLURBEHIND;
+            setComposition(hwnd, &data);
+        }
+    }
 
     qw->setColor(Qt::transparent);
 #else

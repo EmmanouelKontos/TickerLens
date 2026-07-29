@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.0
+
+- Reworked Windows glass rendering to use native Acrylic composition for
+  frameless Qt windows, with Windows 11 DWM backdrop and legacy blur fallbacks.
+- Reduced the surface tint so the frosted desktop blur remains visible.
+- Preserved native Windows 11 rounded corners and DWM window shadows.
+- Added a proper per-user Windows setup executable to GitHub releases.
+
 ## 1.6.6
 
 - **Critical**: fix QML load failure (`onFlagsChanged` is invalid on Qt 6 Window — empty UI / reinstall dialog)

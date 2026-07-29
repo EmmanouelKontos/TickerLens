@@ -18,7 +18,9 @@ Window {
 
     // Live-bound to settings (opacity slider works immediately)
     property int glassOpacityPct: AppSettings.glassOpacity
-    property real glassAlpha: Math.min(0.88, Math.max(0.28, glassOpacityPct / 100.0))
+    // This is a tint over native Acrylic, not a plain opacity value. Keeping
+    // it below ~0.6 lets the desktop blur and acrylic noise remain visible.
+    property real glassAlpha: Math.min(0.60, Math.max(0.24, 0.18 + glassOpacityPct * 0.0045))
     property color cardColor: AppSettings.cardColor
     property color textColor: AppSettings.textColor
     property color mutedColor: AppSettings.mutedTextColor
@@ -73,18 +75,6 @@ Window {
         anchors.fill: parent
         anchors.margins: 0
 
-        // Soft drop shadow under the rounded body
-        Rectangle {
-            anchors.centerIn: parent
-            width: parent.width - 4
-            height: parent.height - 4
-            radius: win.cornerRadius + 4
-            color: Qt.rgba(0, 0, 0, 0.45)
-            z: -1
-            anchors.verticalCenterOffset: 3
-            opacity: 0.55
-        }
-
         Rectangle {
             id: glassRect
             anchors.fill: parent
@@ -93,7 +83,7 @@ Window {
             // Frosted tint over acrylic blur
             color: Qt.rgba(win.cardColor.r, win.cardColor.g, win.cardColor.b, win.glassAlpha)
             border.width: 1
-            border.color: Qt.rgba(1, 1, 1, 0.18)
+            border.color: win.borderColor
             clip: true
 
             // Specular top frost
@@ -104,8 +94,8 @@ Window {
                 height: Math.min(110, parent.height * 0.4)
                 radius: parent.radius
                 gradient: Gradient {
-                    GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.16) }
-                    GradientStop { position: 0.45; color: Qt.rgba(1, 1, 1, 0.04) }
+                    GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.13) }
+                    GradientStop { position: 0.45; color: Qt.rgba(1, 1, 1, 0.025) }
                     GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.0) }
                 }
             }
