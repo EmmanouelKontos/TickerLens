@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.2
+
+- **Critical Windows fix**: app entry point called CRT `main` instead of Qt `qMain` (window never started)
+- Startup log at `%LOCALAPPDATA%\TickerLens\tickerlens.log` and error dialog if UI fails to load
+- Always show Markets window on launch if both windows were hidden
+
 ## 1.6.1
 
 - **Windows fix**: rebuild with MinGW GCC / libstdc++ matching Qt (llvm/libc++ ABI mismatch crashed on start)

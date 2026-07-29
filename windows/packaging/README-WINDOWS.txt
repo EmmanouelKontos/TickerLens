@@ -2,6 +2,9 @@ TickerLens for Windows 11
 =========================
 
 INSTALL (recommended)
+  Prefer the separate setup download:
+    TickerLens-windows-x64-*-setup.exe
+  Or from this portable ZIP:
   1. Extract this entire ZIP folder.
   2. Double-click  Install.bat
   3. TickerLens is installed under:

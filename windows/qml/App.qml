@@ -20,6 +20,23 @@ Item {
         updater.check(true)
     }
 
+    // Called from C++ after load — avoid a silent tray-only start
+    function ensureVisibleOnLaunch() {
+        var showStock = AppSettings.showStockWindow !== false
+        var showNews = AppSettings.showNewsWindow !== false
+        if (!showStock && !showNews)
+            showStock = true
+        stockWin.visible = showStock
+        newsWin.visible = showNews
+        AppSettings.showStockWindow = showStock
+        AppSettings.showNewsWindow = showNews
+        AppSettings.sync()
+        if (stockWin.visible) {
+            stockWin.raise()
+            stockWin.requestActivate()
+        }
+    }
+
     StockWindow {
         id: stockWin
         x: 80
@@ -130,7 +147,8 @@ Item {
     }
 
     Component.onCompleted: {
-        stockWin.visible = AppSettings.showStockWindow
-        newsWin.visible = AppSettings.showNewsWindow
+        // Defaults: show markets; news follows setting
+        stockWin.visible = AppSettings.showStockWindow !== false
+        newsWin.visible = !!AppSettings.showNewsWindow
     }
 }

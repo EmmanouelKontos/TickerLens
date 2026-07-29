@@ -1,18 +1,25 @@
-// Windows entry without relying on Qt's EntryPoint / __argc (cross-compile friendly)
+// Windows GUI entry. Qt on MinGW defines QT_NEEDS_QMAIN so the app entry is
+// named qMain, not main. Call the correct symbol.
 #ifdef _WIN32
 #  include <windows.h>
 #  include <shellapi.h>
 #  include <string>
 #  include <vector>
 
+#  ifdef QT_NEEDS_QMAIN
+extern int qMain(int argc, char *argv[]);
+static int callAppMain(int argc, char **argv) { return qMain(argc, argv); }
+#  else
 extern int main(int argc, char *argv[]);
+static int callAppMain(int argc, char **argv) { return main(argc, argv); }
+#  endif
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
     int argc = 0;
     LPWSTR *argvw = CommandLineToArgvW(GetCommandLineW(), &argc);
     if (!argvw)
-        return main(0, nullptr);
+        return callAppMain(0, nullptr);
 
     std::vector<std::string> storage;
     std::vector<char *> argv;
@@ -32,6 +39,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         argv.push_back(s.data());
 
     LocalFree(argvw);
-    return main(argc, argv.data());
+    return callAppMain(argc, argv.data());
 }
 #endif
