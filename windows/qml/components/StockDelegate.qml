@@ -52,19 +52,32 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        anchors.margins: 4
-        radius: 12
-        color: isPos ? pos : neg
-        opacity: flash ? 0.14 : 0
-        Behavior on opacity { NumberAnimation { duration: 450 } }
+        anchors.leftMargin: 3
+        anchors.rightMargin: 3
+        radius: 10
+        color: hover.containsMouse ? Qt.rgba(1, 1, 1, 0.06) : "transparent"
+        border.width: 0
+        Behavior on color { ColorAnimation { duration: 120 } }
     }
 
     Rectangle {
         anchors.fill: parent
+        anchors.margins: 3
+        radius: 10
+        color: isPos ? pos : neg
+        opacity: flash ? 0.12 : 0
+        Behavior on opacity { NumberAnimation { duration: 450 } }
+    }
+
+    Rectangle {
+        anchors.left: parent.left
         anchors.leftMargin: 4
-        anchors.rightMargin: 4
-        radius: 12
-        color: hover.containsMouse ? Qt.rgba(1, 1, 1, 0.06) : "transparent"
+        anchors.verticalCenter: parent.verticalCenter
+        width: 3
+        height: Math.max(26, parent.height - 18)
+        radius: 2
+        color: isPos ? pos : neg
+        opacity: 0.8
     }
 
     MouseArea {
@@ -86,7 +99,7 @@ Item {
 
     RowLayout {
         anchors.fill: parent
-        anchors.leftMargin: 12
+        anchors.leftMargin: 14
         anchors.rightMargin: 12
         anchors.topMargin: 6
         anchors.bottomMargin: 6
@@ -100,14 +113,9 @@ Item {
             RowLayout {
                 spacing: 5
                 Text {
-                    text: isPos ? "▲" : "▼"
-                    color: isPos ? pos : neg
-                    font.pixelSize: 10
-                    font.bold: true
-                }
-                Text {
                     text: ticker
                     color: txt
+                    font.family: "Segoe UI Variable Display"
                     font.pixelSize: rootItem && rootItem.compactRows ? 13 : 14
                     font.weight: Font.DemiBold
                 }
@@ -135,6 +143,7 @@ Item {
                 visible: rootItem && rootItem.showCompanyName && name.length
                 text: name
                 color: muted
+                font.family: "Segoe UI Variable Text"
                 font.pixelSize: 10
                 elide: Text.ElideRight
                 Layout.fillWidth: true
@@ -243,6 +252,7 @@ Item {
             Text {
                 text: priceText
                 color: txt
+                font.family: "Segoe UI Variable Display"
                 font.pixelSize: rootItem && rootItem.compactRows ? 13 : 14
                 font.weight: Font.DemiBold
                 Layout.alignment: Qt.AlignRight
@@ -261,6 +271,7 @@ Item {
                     anchors.centerIn: parent
                     text: changeText + " (" + changePctText + ")"
                     color: isPos ? pos : neg
+                    font.family: "Segoe UI Variable Text"
                     font.pixelSize: 10
                     font.weight: Font.Bold
                 }

@@ -5,9 +5,9 @@ import "components"
 
 GlassWindow {
     id: root
-    width: 380
-    height: 560
-    minimumWidth: 280
+    width: 410
+    height: 640
+    minimumWidth: 340
     minimumHeight: 200
     title: "TickerLens"
     windowTitle: "Markets"
@@ -966,29 +966,34 @@ ListModel { id: stockModel }
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 10
-        spacing: 6
+        anchors.margins: 12
+        spacing: 7
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: 6
+            spacing: 7
+            Text {
+                text: "TickerLens Markets"
+                color: root.textColor
+                font.family: "Segoe UI Variable Display"
+                font.pixelSize: 14
+                font.weight: Font.DemiBold
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.SizeAllCursor
+                    onPressed: root.startSystemMove()
+                }
+            }
             Text {
                 text: root.statusText
                 color: root.mutedTextColor
-                font.pixelSize: 11
+                font.pixelSize: 10
                 elide: Text.ElideRight
                 Layout.fillWidth: true
             }
-            IconBtn { label: "↻"; tip: "Refresh"; onClicked: root.refresh(true) }
-            IconBtn { label: "⎘"; tip: "Copy watchlist"; onClicked: root.copyWatchlist() }
+            IconBtn { label: "↻"; tip: "Refresh prices"; onClicked: root.refresh(true) }
+            IconBtn { label: "▣"; tip: "Copy watchlist"; onClicked: root.copyWatchlist() }
             IconBtn { label: "⚙"; tip: "Settings"; onClicked: stockSettings.open() }
-            IconBtn { label: "✕"; tip: "Hide"; onClicked: root.visible = false }
-        }
-
-        Rectangle {
-            Layout.fillWidth: true
-            height: 1
-            color: Qt.rgba(1, 1, 1, 0.08)
         }
 
         Item {
@@ -1030,8 +1035,17 @@ ListModel { id: stockModel }
             visible: stockModel.count > 0 && !root.useGrid
             clip: true
             model: stockModel
-            spacing: 0
+            spacing: 2
             boundsBehavior: Flickable.StopAtBounds
+            ScrollBar.vertical: ScrollBar {
+                policy: ScrollBar.AsNeeded
+                width: 3
+                contentItem: Rectangle {
+                    radius: 2
+                    color: Qt.rgba(1, 1, 1, 0.22)
+                }
+                background: Item {}
+            }
             delegate: StockDelegate {
                 rootItem: root
                 showChart: root.showCharts

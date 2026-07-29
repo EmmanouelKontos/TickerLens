@@ -1,25 +1,30 @@
 import QtQuick
 import QtQuick.Controls
 
-// Small glass pill button matching KDE widget chrome
+// Compact Fluent glass button.
 Rectangle {
     id: btn
     property string label: ""
     property string tip: ""
     signal clicked()
 
-    width: 30
-    height: 28
-    radius: 8
-    color: ma.containsMouse ? Qt.rgba(1, 1, 1, 0.12) : Qt.rgba(1, 1, 1, 0.06)
-    border.color: Qt.rgba(1, 1, 1, 0.10)
+    width: 32
+    height: 32
+    radius: 10
+    color: ma.pressed ? Qt.rgba(1, 1, 1, 0.16)
+                      : ma.containsMouse ? Qt.rgba(1, 1, 1, 0.11)
+                                         : Qt.rgba(1, 1, 1, 0.045)
+    border.color: ma.containsMouse ? Qt.rgba(1, 1, 1, 0.16)
+                                   : Qt.rgba(1, 1, 1, 0.075)
     border.width: 1
 
     Text {
         anchors.centerIn: parent
         text: btn.label
         color: AppSettings.textColor
-        font.pixelSize: 13
+        font.family: "Segoe UI Symbol"
+        font.pixelSize: 14
+        font.weight: Font.Medium
     }
 
     MouseArea {

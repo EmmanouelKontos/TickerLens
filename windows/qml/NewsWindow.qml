@@ -398,6 +398,17 @@ GlassWindow {
             Layout.fillWidth: true
             spacing: 6
             Text {
+                text: "TickerLens News"
+                color: root.textColor
+                font.pixelSize: 14
+                font.weight: Font.DemiBold
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.SizeAllCursor
+                    onPressed: root.startSystemMove()
+                }
+            }
+            Text {
                 text: root.statusText
                 color: root.mutedTextColor
                 font.pixelSize: 11
@@ -406,7 +417,6 @@ GlassWindow {
             }
             IconBtn { label: "↻"; tip: "Refresh"; onClicked: root.refresh(true) }
             IconBtn { label: "⚙"; tip: "Settings"; onClicked: newsSettings.open() }
-            IconBtn { label: "✕"; tip: "Hide"; onClicked: root.visible = false }
         }
         Rectangle { Layout.fillWidth: true; height: 1; color: Qt.rgba(1,1,1,0.08) }
 

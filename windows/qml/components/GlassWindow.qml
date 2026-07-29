@@ -20,12 +20,13 @@ Window {
     property int glassOpacityPct: AppSettings.glassOpacity
     // This is a tint over native Acrylic, not a plain opacity value. Keeping
     // it below ~0.6 lets the desktop blur and acrylic noise remain visible.
-    property real glassAlpha: Math.min(0.60, Math.max(0.24, 0.18 + glassOpacityPct * 0.0045))
+    property real glassAlpha: Math.min(0.44, Math.max(0.18, 0.12 + glassOpacityPct * 0.0025))
     property color cardColor: AppSettings.cardColor
     property color textColor: AppSettings.textColor
     property color mutedColor: AppSettings.mutedTextColor
     property color borderColor: Qt.rgba(1, 1, 1, Math.max(0.14, AppSettings.borderOpacity / 100.0))
     property int cornerRadius: Math.max(16, AppSettings.cornerRadius || 22)
+    property int titleBarHeight: 0
 
     default property alias contentData: body.data
 
@@ -94,8 +95,8 @@ Window {
                 height: Math.min(110, parent.height * 0.4)
                 radius: parent.radius
                 gradient: Gradient {
-                    GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.13) }
-                    GradientStop { position: 0.45; color: Qt.rgba(1, 1, 1, 0.025) }
+                    GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.10) }
+                    GradientStop { position: 0.45; color: Qt.rgba(1, 1, 1, 0.018) }
                     GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.0) }
                 }
             }
@@ -117,7 +118,8 @@ Window {
                 Item {
                     id: titleBar
                     width: parent.width
-                    height: 38
+                    height: win.titleBarHeight
+                    visible: height > 0
 
                     MouseArea {
                         anchors.fill: parent

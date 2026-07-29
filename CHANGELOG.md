@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.2
+
+- Redesigned the Windows Markets panel with a cleaner Fluent glass layout,
+  larger typography, calmer spacing, modern stock cards, and subtle controls.
+- Reduced the acrylic tint so the desktop blur remains clearly visible.
+- Removed redundant window controls, heavy row separators, and the exposed
+  scrollbar styling.
+
 ## 1.7.1
 
 - Fixed the Windows package failing to start by rebuilding the executable with

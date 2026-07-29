@@ -354,7 +354,7 @@ void PlatformUtils::applyGlassEffect(QObject *window) const
         ACCENT_POLICY policy{};
         policy.AccentState = ACCENT_ENABLE_ACRYLICBLURBEHIND;
         policy.AccentFlags = 2; // draw the subtle inner border
-        policy.GradientColor = 0xB8201818; // translucent warm charcoal
+        policy.GradientColor = 0x701C1818; // light charcoal tint; keep blur visible
         WINDOWCOMPOSITIONATTRIBDATA data{
             WCA_ACCENT_POLICY, &policy, sizeof(policy)
         };

@@ -60,8 +60,8 @@ Item {
         id: stockWin
         x: 80
         y: 80
-        width: 380
-        height: 560
+        width: 410
+        height: 640
     }
 
     NewsWindow {

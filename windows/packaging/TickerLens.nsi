@@ -2,7 +2,7 @@
 ; Build: makensis TickerLens.nsi  (with STAGE_DIR pointing at portable folder)
 
 !ifndef VERSION
-  !define VERSION "1.7.1"
+  !define VERSION "1.7.2"
 !endif
 !ifndef STAGE_DIR
   !define STAGE_DIR "..\..\dist\TickerLens-windows-x64-${VERSION}"
