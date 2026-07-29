@@ -1,67 +1,87 @@
 # TickerLens
 
-**Frosted-glass market widgets for KDE Plasma 6** — free to use, free market data, optional AI news sentiment.
+**Frosted-glass market widgets for KDE Plasma 6.**
 
-| Widget | What it does |
-|--------|----------------|
-| **TickerLens** | Watchlist with live prices, day change, sparklines, ATH distance, next earnings, portfolio P/L, alerts |
-| **TickerLens News** | Headlines for the same symbols + Good / Neutral / Bad rating (local lexicon or DeepSeek) |
+Free to use. Free market data. Optional AI news sentiment.
 
-Plugin IDs (for install / upgrades): `com.github.stockglass`, `com.github.stockglass.news`.
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![Plasma](https://img.shields.io/badge/Plasma-6-blueviolet)](https://kde.org/plasma-desktop/)
+[![Platform](https://img.shields.io/badge/platform-Linux-lightgrey)](#requirements)
+
+| Widget | Role |
+|--------|------|
+| **TickerLens** | Live watchlist — prices, ATH, earnings, sparklines, portfolio, alerts |
+| **TickerLens News** | Headlines for the same symbols + Good / Neutral / Bad sentiment |
+
+Plugin IDs: `com.github.stockglass` · `com.github.stockglass.news`
+
+Repository: [github.com/EmmanouelKontos/TickerLens](https://github.com/EmmanouelKontos/TickerLens)
+
+---
+
+## Highlights
+
+- Modern **glass** UI that fits Plasma
+- **No API key** required for quotes, ATH, earnings, or news
+- Optional **DeepSeek** ratings for headlines (your key, offline lexicon fallback)
+- Shared watchlist between price widget and news widget
+- Privacy-minded: secrets stay in `~/.config/stockglass/`, never in the repo
 
 ---
 
 ## Features
 
 ### TickerLens
-- Live quotes via Yahoo Finance (no API key)
-- Configurable refresh, weekend / market hours / US holiday pause
-- Optional pause on battery or screen lock
-- Distance from all-time high (+ gold **ATH** badge)
-- Next earnings date (highlight when soon)
-- Intraday sparklines (auto-hide on narrow widgets)
-- Day range bar, pre/after-hours when available
-- Portfolio shares + avg cost → P/L
-- Price / change / near-ATH desktop alerts
-- Multi-column layout when wide
-- Drag reorder (sort = “As listed”)
+- Live quotes (Yahoo Finance public endpoints)
+- Day change $ / %, sparklines (hide when the widget is narrow)
+- Distance from **all-time high** + ATH badge
+- **Next earnings** date (soon highlighted)
+- Pre / after-hours when available
+- Portfolio: shares + average cost → P/L
+- Desktop **alerts** (price, day change, near ATH)
+- Multi-column when wide; drag reorder when sort is “As listed”
+- Weekend / market hours / US holiday pause; optional battery & lock pause
 - Export / copy watchlist
 
 ### TickerLens News
-- Follows shared watchlist from TickerLens
+- Follows the TickerLens shared watchlist
 - Yahoo Finance headlines (free)
-- Free local sentiment lexicon
-- Optional **DeepSeek** batch AI ratings (`deepseek-chat` recommended)
-- Click headline to open article
+- Free local **lexicon** sentiment
+- Optional **DeepSeek** batch AI sentiment (`deepseek-chat` recommended)
+- Click a headline to open the article
 
 ---
 
 ## Requirements
 
-- KDE Plasma **6**
+- KDE **Plasma 6**
 - Network access to:
-  - `query1.finance.yahoo.com`
-  - `stockanalysis.com` (earnings)
-  - `api.deepseek.com` (optional AI)
-- Python 3 (for DeepSeek helper only)
+  - `query1.finance.yahoo.com` — quotes & news  
+  - `stockanalysis.com` — earnings  
+  - `api.deepseek.com` — optional AI only  
+- **Python 3** — only for the optional DeepSeek helper
 
 ---
 
 ## Install
 
 ```bash
+git clone https://github.com/EmmanouelKontos/TickerLens.git
+cd TickerLens
 chmod +x install.sh
 ./install.sh
 ```
 
-Desktop: **Add Widgets** → search **TickerLens** and **TickerLens News**.
+Then: desktop → **Add Widgets** → search **TickerLens** and **TickerLens News**.
+
+Preview:
 
 ```bash
 plasmawindowed com.github.stockglass
 plasmawindowed com.github.stockglass.news
 ```
 
-After upgrade, if UI is stale:
+After an upgrade, if the UI looks stale:
 
 ```bash
 kquitapp6 plasmashell; plasmashell --replace &
@@ -76,45 +96,43 @@ kpackagetool6 --type Plasma/Applet --remove com.github.stockglass.news
 
 ---
 
-## Shared watchlist & secrets
+## Configuration tips
 
-| Path | Purpose |
-|------|---------|
-| `~/.config/stockglass/watchlist.json` | Symbols shared with News (written by TickerLens) |
-| `~/.config/stockglass/deepseek.key` | Optional DeepSeek API key (`chmod 600`) |
-| `~/.config/stockglass/rate_news.py` | AI helper (copied by install) |
-| `~/.config/stockglass/ds_payload.json` | Temporary AI request body |
-
-Open **TickerLens** at least once so the shared watchlist file is created.
-
-DeepSeek key (optional):
+1. Open **TickerLens** once so it writes  
+   `~/.config/stockglass/watchlist.json`  
+   (News reads this by default.)
+2. Optional DeepSeek key:
 
 ```bash
 printf '%s' 'sk-…' > ~/.config/stockglass/deepseek.key
 chmod 600 ~/.config/stockglass/deepseek.key
 ```
 
-Or paste the key in **TickerLens News → Configure**.
+Or paste the key under **TickerLens News → Configure**.  
+Recommended model: **`deepseek-chat`**.
 
 ---
 
-## Privacy & disclaimer
+## Local files (not in git)
 
-- Market data providers are unofficial public endpoints; they can rate-limit or change.
-- Sentiment is a **heuristic**, not financial advice.
-- Do not commit API keys. See [SECURITY.md](SECURITY.md).
+| Path | Purpose |
+|------|---------|
+| `~/.config/stockglass/watchlist.json` | Shared symbols |
+| `~/.config/stockglass/deepseek.key` | API key (mode 600) |
+| `~/.config/stockglass/rate_news.py` | AI helper (installed by `install.sh`) |
+| `~/.config/stockglass/ds_payload.json` | Temporary AI request body |
 
 ---
 
 ## Project layout
 
 ```
-package/                 # TickerLens plasmoid
-news-package/            # TickerLens News plasmoid
+package/           # TickerLens plasmoid
+news-package/      # TickerLens News plasmoid
   contents/code/rate_news.py
 install.sh
 README.md
-LICENSE
+LICENSE            # GNU GPL v3
 SECURITY.md
 CHANGELOG.md
 ```
@@ -123,4 +141,32 @@ CHANGELOG.md
 
 ## License
 
-[GPL-3.0-or-later](LICENSE)
+This project is licensed under the **GNU General Public License v3.0 or later**.  
+See [LICENSE](LICENSE) for the full text.
+
+You may use, share, and modify TickerLens freely under the GPL.  
+There is **no warranty**; market data and sentiment are **not financial advice**.
+
+### Third-party data
+
+- Yahoo Finance and stockanalysis.com are used via public endpoints without affiliation.  
+- Those services may change or rate-limit access.  
+- DeepSeek is optional and subject to [DeepSeek’s terms](https://www.deepseek.com/).
+
+---
+
+## Security
+
+See [SECURITY.md](SECURITY.md). **Never commit API keys.**
+
+---
+
+## Contributing
+
+Issues and pull requests are welcome. Please keep secrets out of commits and test with Plasma 6.
+
+---
+
+## Author
+
+[Emmanouel Kontos](https://github.com/EmmanouelKontos)

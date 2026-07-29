@@ -1,26 +1,23 @@
-# Security
+# Security Policy
+
+## Supported versions
+
+Security fixes target the latest `main` branch of this repository.
 
 ## Secrets
 
-- **Never commit** DeepSeek (or any) API keys.
-- Preferred storage: `~/.config/stockglass/deepseek.key` with mode `600`.
-- Widget settings may also hold a key in Plasma’s per-applet config (local only).
-- `~/.config/stockglass/ds_payload.json` may contain headlines sent to DeepSeek; it is local and gitignored.
+- **Do not commit** API keys, tokens, or passwords.
+- Preferred DeepSeek key path: `~/.config/stockglass/deepseek.key` (`chmod 600`).
+- Plasma may also store a key in local applet configuration (machine-local only).
+- `ds_payload.json` may contain recent headlines; it is local and gitignored.
 
-## Network
+## Reporting a vulnerability
 
-- Quotes / news: public Yahoo Finance endpoints (unofficial; no key).
-- Earnings: public stockanalysis.com API (no key).
-- Optional AI: `https://api.deepseek.com/chat/completions` with your key.
-- Notifications use `notify-send` when available.
+Please open a **private** security advisory on GitHub, or contact the repository owner via GitHub, rather than filing a public issue with exploit details.
 
-## Hardening notes
+## Scope notes
 
-- DeepSeek helper (`rate_news.py`) never prints the API key.
-- Payload size and model name are clamped/validated in the helper.
-- Executable DataSources are limited to watchlist sync, power/lock probes, notifications, and the DeepSeek helper.
-- Treat market data and AI sentiment as **informational only**, not investment advice.
-
-## Reporting issues
-
-Open a private security note on the GitHub repository if you find a vulnerability.
+- Market data uses unofficial public HTTP APIs; treat them as untrusted input.
+- Desktop notifications invoke `notify-send` with shell-escaped arguments.
+- Optional AI calls go only to `https://api.deepseek.com`.
+- This software is provided under the GPL **without warranty**.

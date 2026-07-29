@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check required files
+        run: |
+          test -f LICENSE
+          test -f README.md
+          test -f SECURITY.md
+          test -f package/metadata.json
+          test -f news-package/metadata.json
+          test -f package/contents/ui/main.qml
+          test -f news-package/contents/ui/main.qml
+          test -f news-package/contents/code/rate_news.py
+          test -x install.sh || chmod +x install.sh
+
+      - name: Validate metadata JSON
+        run: |
+          python3 -m json.tool package/metadata.json > /dev/null
+          python3 -m json.tool news-package/metadata.json > /dev/null
+
+      - name: Ensure no accidental secrets
+        run: |
+          if grep -RInE 'sk-[a-zA-Z0-9]{20,}' --exclude-dir=.git . ; then
+            echo "Possible API key found in tree" >&2
+            exit 1
+          fi
+          echo "No sk- keys detected"
+
+      - name: Python syntax check
+        run: python3 -m py_compile news-package/contents/code/rate_news.py

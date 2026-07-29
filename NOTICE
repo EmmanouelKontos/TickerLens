@@ -1,0 +1,13 @@
+TickerLens
+Copyright (C) 2026 Emmanouel Kontos and contributors
+
+This product is licensed under the GNU General Public License, version 3 or later.
+See the LICENSE file for details.
+
+Third-party services (not affiliated with this project):
+
+  - Yahoo Finance public HTTP endpoints (quotes, charts, news search)
+  - stockanalysis.com public HTTP endpoints (earnings calendar)
+  - DeepSeek API (optional; requires a user-supplied API key)
+
+Trademarks remain the property of their respective owners.
