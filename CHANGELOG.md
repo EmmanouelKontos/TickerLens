@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.1
+
+- Fixed the Windows surface to use a forced native Acrylic composition policy
+  when WPF's redirection surface prevents the standard DWM backdrop from
+  showing through.
+- Replaced the legacy WPF scrollbar with a narrow, rounded overlay thumb.
+- Removed the dotted resize grip and refined the glass edge with separate
+  outer-highlight and inner-shadow rims.
+- Replaced text-symbol toolbar icons with native Segoe Fluent Icons glyphs.
+
 ## 2.0.0
 
 - Replaced the Windows Qt/QML frontend with an independent native WPF/.NET 8

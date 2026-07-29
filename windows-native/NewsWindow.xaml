@@ -4,8 +4,9 @@
     xmlns:local="clr-namespace:TickerLens.Native"
     Title="TickerLens News" Width="410" Height="520" MinWidth="350" MinHeight="320"
     Left="500" Top="70">
-    <Border CornerRadius="22" Background="#5213161F" BorderBrush="#42FFFFFF" BorderThickness="1">
-        <Grid Margin="13,11,13,12">
+    <Border CornerRadius="22" Background="#2413161F" BorderBrush="#50FFFFFF" BorderThickness="1">
+      <Border CornerRadius="21" BorderBrush="#13000000" BorderThickness="1" Margin="1">
+        <Grid Margin="12,10,12,11">
             <Grid.RowDefinitions>
                 <RowDefinition Height="34"/>
                 <RowDefinition Height="1"/>
@@ -22,7 +23,9 @@
                            Foreground="{StaticResource TextMuted}" FontSize="10"
                            TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
                 <Button Grid.Column="2" Style="{StaticResource GlassButton}"
-                        Content="↻" ToolTip="Refresh news" Click="RefreshClick"/>
+                        ToolTip="Refresh news" Click="RefreshClick">
+                    <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons" FontSize="12"/>
+                </Button>
             </Grid>
             <Border Grid.Row="1" Background="#16FFFFFF"/>
             <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto"
@@ -81,5 +84,6 @@
                        Foreground="{StaticResource TextMuted}" FontSize="9" Opacity=".75"
                        HorizontalAlignment="Center" VerticalAlignment="Bottom"/>
         </Grid>
+      </Border>
     </Border>
 </local:AcrylicWindow>

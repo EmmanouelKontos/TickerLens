@@ -10,7 +10,7 @@
     <AssemblyName>TickerLens</AssemblyName>
     <RootNamespace>TickerLens.Native</RootNamespace>
     <ApplicationIcon>..\windows\assets\app.ico</ApplicationIcon>
-    <Version>2.0.0</Version>
+    <Version>2.0.1</Version>
     <Authors>TickerLens contributors</Authors>
     <SelfContained>true</SelfContained>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
