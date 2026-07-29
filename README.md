@@ -124,13 +124,26 @@ Recommended model: **`deepseek-chat`**.
 
 ---
 
+## Windows 11
+
+A full desktop port lives in [`windows/`](windows/) (Qt 6 floating glass windows + system tray).
+
+```powershell
+cd windows
+.\build-windows.ps1 -QtPath "C:\Qt\6.7.3\msvc2019_64"
+```
+
+See [windows/README.md](windows/README.md) for build requirements and feature parity with Plasma.
+
+---
+
 ## Project layout
 
 ```
-package/           # TickerLens plasmoid
-news-package/      # TickerLens News plasmoid
-  contents/code/rate_news.py
-install.sh
+package/           # Plasma 6 — TickerLens
+news-package/      # Plasma 6 — TickerLens News
+windows/           # Windows 11 / desktop Qt 6 app
+install.sh         # Linux Plasma install
 README.md
 LICENSE            # GNU GPL v3
 SECURITY.md
