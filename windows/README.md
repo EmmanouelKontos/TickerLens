@@ -1,13 +1,14 @@
 # TickerLens for Windows 11
 
-Standalone **Windows 11 desktop app** — separate from the KDE Plasma widgets, same product goals:
+The current Windows application lives in `windows-native/` and is an independent
+**WPF/.NET 8 Windows 11 app**. It does not share a UI stack with the KDE widgets.
 
 - Frosted glass floating **Markets** + **News** panels  
 - Looks close to the Plasma widgets (dark glass, badges, sparklines, sentiment)  
 - System tray control  
-- Free market data (Yahoo + earnings API); optional DeepSeek for news ratings  
+- Free market data and headlines from Yahoo Finance
 
-This is **not** a Plasma build. It is a Qt 6 app designed for Win11 (also runs on Linux for development).
+This is **not** a Plasma or Qt build. Its UI and lifecycle are Windows-native.
 
 ---
 
@@ -17,7 +18,7 @@ This is **not** a Plasma build. It is a Qt 6 app designed for Win11 (also runs o
 |----------|---------|
 | Plasma QML on Windows | Not practical |
 | Share one QML plasmoid | Too many KDE-only APIs |
-| **Dedicated Qt 6 desktop app** | Best balance: glass UI, one `.exe`, full control |
+| **Native WPF + DWM app** | Real Windows composition, typography, controls, and HWND behavior |
 | Electron | Heavier, less “native widget” feel |
 
 ---
@@ -25,60 +26,40 @@ This is **not** a Plasma build. It is a Qt 6 app designed for Win11 (also runs o
 ## Look & feel (Windows)
 
 - Frameless translucent windows with soft shadow  
-- **Windows 11 Acrylic / rounded corners** via DWM when available  
+- Native **Windows 11 Desktop Acrylic / rounded corners** via DWM
 - Drag title bar · resize grip · always-on-top option  
 - Tray icon: show/hide Markets or News, Quit  
 
 ---
 
-## Build on Windows 11
+## Build the native Windows app
 
-### 1. Install tools
-- [Visual Studio 2022](https://visualstudio.microsoft.com/) with **Desktop C++**  
-- [Qt 6.5+](https://www.qt.io/download) (MSVC kit) + **Qt Quick**  
-- [CMake](https://cmake.org/download/)  
-- [Python 3](https://www.python.org/) (for optional AI ratings)  
-- [Ninja](https://ninja-build.org/) (optional, recommended)
-
-### 2. Build
+Install the .NET 8 SDK, then:
 
 ```powershell
-cd windows
-.\build-windows.ps1 -QtPath "C:\Qt\6.7.3\msvc2019_64"
+dotnet publish windows-native\TickerLens.Native.csproj -c Release -r win-x64 --self-contained true
 ```
 
-Output: `build\Release\TickerLens.exe` (plus Qt DLLs via `windeployqt`).
+Output: `windows-native\bin\Release\...\publish\TickerLens.exe`.
 
-### 3. Run
+### Run
 
 Double-click **TickerLens.exe** or:
 
 ```powershell
-.\build\Release\TickerLens.exe
+.\windows-native\bin\Release\net8.0-windows10.0.19041.0\win-x64\publish\TickerLens.exe
 ```
 
 Config lives in:
 
 ```text
-%APPDATA%\TickerLens\TickerLens\
-```
-
-DeepSeek key (optional):
-
-```text
-%APPDATA%\TickerLens\TickerLens\deepseek.key
+%APPDATA%\TickerLens\native-settings.json
 ```
 
 ---
 
-## Build on Linux (dev smoke test)
-
-```bash
-cd windows
-cmake -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build -j
-./build/TickerLens
-```
+The Windows publish can also be cross-compiled with the .NET 8 SDK on Linux by
+setting `EnableWindowsTargeting`, which is already enabled in the project.
 
 ---
 
@@ -89,11 +70,8 @@ cmake --build build -j
 | Live quotes, day change | ✓ |
 | Sparklines (hide when narrow) | ✓ |
 | ATH distance | ✓ |
-| Next earnings | ✓ |
-| Portfolio P/L | ✓ (JSON in settings) |
-| Alerts (desktop toast on Win11) | ✓ |
-| News + lexicon / DeepSeek | ✓ |
-| Glass UI | ✓ |
+| News + local headline sentiment | ✓ |
+| Native Desktop Acrylic | ✓ |
 | Tray | ✓ (replaces panel pill) |
 
 ---

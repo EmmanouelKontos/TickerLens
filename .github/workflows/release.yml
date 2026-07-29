@@ -60,33 +60,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Ninja
-        run: choco install ninja -y
-
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v4
+      - name: Install .NET
+        uses: actions/setup-dotnet@v4
         with:
-          version: "6.7.3"
-          host: windows
-          target: desktop
-          arch: win64_msvc2019_64
-          modules: ""
-          tools: ""
-          cache: true
-          setup-python: false
+          dotnet-version: "8.0.x"
 
-      - name: Setup MSVC
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x64
-
-      - name: Configure & build
+      - name: Build native Windows app
         shell: pwsh
         run: |
-          cd windows
-          Write-Host "QT_ROOT_DIR=$env:QT_ROOT_DIR"
-          cmake -B build -DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR" -DCMAKE_BUILD_TYPE=Release -G Ninja
-          cmake --build build --config Release -j 4
+          dotnet publish windows-native/TickerLens.Native.csproj `
+            -c Release -r win-x64 --self-contained true `
+            -o windows-native/publish
 
       - name: Package portable + installer
         shell: pwsh
@@ -95,32 +79,11 @@ jobs:
           $version = "${{ github.event.inputs.tag || github.ref_name }}"
           $version = $version.TrimStart("v")
 
-          $exeCandidates = @(
-            "windows/build/TickerLens.exe",
-            "windows/build/Release/TickerLens.exe"
-          )
-          $exe = $exeCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
-          if (-not $exe) { throw "TickerLens.exe not found after build" }
-          $buildDir = Split-Path $exe -Parent
-
-          # Deploy Qt runtime next to exe
-          windeployqt --release --qmldir windows/qml --compiler-runtime $exe
-
           # Stage clean portable folder
           $stageName = "TickerLens-windows-x64-$version"
           $stage = "dist/$stageName"
           New-Item -ItemType Directory -Force -Path $stage | Out-Null
-
-          # Copy deployed tree (exe + dlls + qml + plugins)
-          Get-ChildItem $buildDir -Force | Where-Object {
-            $_.Name -notin @("CMakeFiles","CMakeCache.txt",".ninja_deps",".ninja_log","build.ninja","cmake_install.cmake")
-          } | ForEach-Object {
-            Copy-Item $_.FullName -Destination (Join-Path $stage $_.Name) -Recurse -Force
-          }
-
-          Copy-Item windows/scripts/rate_news.py $stage -Force
-          Copy-Item windows/packaging/Install-TickerLens.ps1 $stage -Force
-          Copy-Item windows/packaging/Install.bat $stage -Force
+          Copy-Item windows-native/publish/TickerLens.exe $stage -Force
           Copy-Item windows/packaging/README-WINDOWS.txt $stage -Force
           Copy-Item LICENSE $stage -Force
 
@@ -179,7 +142,7 @@ jobs:
           ### Windows 11
           1. Download and run **\`TickerLens-windows-x64-*-setup.exe\`**
           2. Or download the ZIP for a portable installation
-          3. Optional: install [VC++ Redistributable x64](https://aka.ms/vs/17/release/vc_redist.x64.exe) if the app fails to start
+          3. The app is self-contained; no Qt or .NET installation is required
 
           ### Linux (KDE Plasma 6)
           1. Download **\`TickerLens-linux-plasma6-*.tar.gz\`**

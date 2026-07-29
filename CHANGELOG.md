@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.0
+
+- Replaced the Windows Qt/QML frontend with an independent native WPF/.NET 8
+  application rendered through DirectWrite and DirectX.
+- Uses the real Windows 11 DWM Desktop Acrylic system backdrop, native rounded
+  corners, native window shadows, and Windows typography.
+- Added self-contained native Markets and News windows, live Yahoo quotes,
+  sparklines, ATH distance, sentiment accents, settings, and tray controls.
+- Windows no longer ships or loads Qt, QML, MinGW, or third-party UI runtimes.
+
 ## 1.7.2
 
 - Redesigned the Windows Markets panel with a cleaner Fluent glass layout,

@@ -1,0 +1,99 @@
+<local:AcrylicWindow x:Class="TickerLens.Native.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:TickerLens.Native"
+    Title="TickerLens Markets" Width="410" Height="640" MinWidth="350" MinHeight="360"
+    Left="70" Top="70" Topmost="False">
+    <Border CornerRadius="22" Background="#5213161F" BorderBrush="#42FFFFFF"
+            BorderThickness="1" SnapsToDevicePixels="True">
+        <Grid Margin="13,11,13,12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="34"/>
+                <RowDefinition Height="1"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="22"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" MouseLeftButtonDown="DragHeader">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="TickerLens Markets" Foreground="{StaticResource TextPrimary}"
+                           FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <TextBlock x:Name="StatusText" Grid.Column="1" Margin="8,0"
+                           Foreground="{StaticResource TextMuted}" FontSize="10"
+                           TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                <Button Grid.Column="2" Style="{StaticResource GlassButton}" Margin="0,0,6,0"
+                        Content="↻" ToolTip="Refresh prices" Click="RefreshClick"/>
+                <Button Grid.Column="3" Style="{StaticResource GlassButton}"
+                        Content="⚙" ToolTip="Settings" Click="SettingsClick"/>
+            </Grid>
+            <Border Grid.Row="1" Background="#16FFFFFF" Margin="1,0"/>
+
+            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled" Margin="0,6,0,2">
+                <ItemsControl x:Name="QuoteList">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate><StackPanel/></ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border x:Name="Row" CornerRadius="10" Padding="12,9,10,9"
+                                    Margin="0,1" Background="Transparent"
+                                    Cursor="Hand" MouseLeftButtonUp="QuoteClick">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="3"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="68"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border x:Name="AccentBar" CornerRadius="2" Margin="0,2,0,2"
+                                            Background="{StaticResource Positive}"/>
+                                    <StackPanel Grid.Column="1" Margin="10,0,10,0" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Symbol}" Foreground="{StaticResource TextPrimary}"
+                                                   FontSize="14" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding Name}" Foreground="{StaticResource TextMuted}"
+                                                   FontSize="10" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <local:Sparkline Grid.Column="2" Width="62" Height="28"
+                                                     Values="{Binding Spark}" Positive="{Binding Positive}"
+                                                     VerticalAlignment="Center"/>
+                                    <StackPanel Grid.Column="3" Margin="10,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding PriceText}" Foreground="{StaticResource TextPrimary}"
+                                                   FontSize="14" FontWeight="SemiBold" TextAlignment="Right"/>
+                                        <Border x:Name="ChangeBadge" CornerRadius="5" Padding="5,2" Margin="0,3,0,0"
+                                                Background="#243FD779">
+                                            <TextBlock x:Name="ChangeLabel" Text="{Binding ChangeText}"
+                                                       Foreground="{StaticResource Positive}" FontSize="9.5"
+                                                       FontWeight="SemiBold"/>
+                                        </Border>
+                                        <TextBlock Text="{Binding AthText}" Foreground="{StaticResource Gold}"
+                                                   FontSize="8.5" TextAlignment="Right" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding Positive}" Value="False">
+                                    <Setter TargetName="AccentBar" Property="Background" Value="{StaticResource Negative}"/>
+                                    <Setter TargetName="ChangeBadge" Property="Background" Value="#28FF5A61"/>
+                                    <Setter TargetName="ChangeLabel" Property="Foreground" Value="{StaticResource Negative}"/>
+                                </DataTrigger>
+                                <Trigger SourceName="Row" Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Row" Property="Background" Value="#14FFFFFF"/>
+                                </Trigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <TextBlock Grid.Row="3" Text="Yahoo Finance · free market data"
+                       Foreground="{StaticResource TextMuted}" FontSize="9" Opacity=".75"
+                       HorizontalAlignment="Center" VerticalAlignment="Bottom"/>
+        </Grid>
+    </Border>
+</local:AcrylicWindow>

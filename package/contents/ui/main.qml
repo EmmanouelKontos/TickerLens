@@ -51,7 +51,7 @@ PlasmoidItem {
     readonly property int multiColumnMinWidth: Plasmoid.configuration.multiColumnMinWidth || 520
     readonly property string panelSymbol: (Plasmoid.configuration.panelSymbol || "").trim().toUpperCase()
     readonly property bool checkForUpdates: Plasmoid.configuration.checkForUpdates !== false
-    readonly property string appVersion: "1.7.2"
+    readonly property string appVersion: "2.0.0"
     readonly property string updateApiUrl: "https://api.github.com/repos/EmmanouelKontos/TickerLens/releases/latest"
     readonly property string updateFallbackUrl: "https://github.com/EmmanouelKontos/TickerLens/releases/latest"
 

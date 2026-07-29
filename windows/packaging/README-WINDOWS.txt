@@ -4,32 +4,17 @@ TickerLens for Windows 11
 INSTALL (recommended)
   Prefer the separate setup download:
     TickerLens-windows-x64-*-setup.exe
-  Or from this portable ZIP:
-  1. Extract this entire ZIP folder.
-  2. Double-click  Install.bat
-  3. TickerLens is installed under:
-       %LOCALAPPDATA%\TickerLens
-  4. Shortcuts are added to Desktop and Start Menu.
+  Or extract the portable ZIP and run TickerLens.exe directly.
 
 PORTABLE (no install)
   Double-click TickerLens.exe in this folder.
 
 UNINSTALL
-  Run Uninstall.ps1 from the install folder, or delete:
-       %LOCALAPPDATA%\TickerLens
-  and remove the Desktop / Start Menu shortcuts.
-
-OPTIONAL — DeepSeek AI news ratings
-  Put your API key in:
-       %APPDATA%\TickerLens\TickerLens\deepseek.key
-  (one line, starts with sk-)
-  Requires Python 3 on PATH.
+  Use Settings > Apps > Installed apps > TickerLens > Uninstall.
 
 REQUIREMENTS
-  Windows 10/11 64-bit
-  Visual C++ Redistributable 2015–2022 x64
-    https://aka.ms/vs/17/release/vc_redist.x64.exe
-  (often already installed)
+  Windows 11 64-bit
+  No separate Qt, .NET, Python, or Visual C++ runtime installation is needed.
 
 Support: https://github.com/EmmanouelKontos/TickerLens
 License: GNU GPL v3

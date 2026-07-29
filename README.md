@@ -72,7 +72,7 @@ Get installers from **[Releases](https://github.com/EmmanouelKontos/TickerLens/r
 | Platform | Asset | How |
 |----------|--------|-----|
 | **Windows 11** | `TickerLens-windows-x64-*-setup.exe` | Run the installer (recommended) |
-| **Windows 11** | `TickerLens-windows-x64-*.zip` | Portable: extract → run **`TickerLens.exe`** (or `Install.bat`) |
+| **Windows 11** | `TickerLens-windows-x64-*.zip` | Portable: extract → run **`TickerLens.exe`** |
 | **Linux Plasma 6** | `TickerLens-linux-plasma6-*.tar.gz` | Extract → `./install.sh` |
 
 ### From source (Linux Plasma)
@@ -110,11 +110,11 @@ kpackagetool6 --type Plasma/Applet --remove com.github.stockglass.news
 
 ## Updates
 
-When **Check for updates** is enabled (default), the Windows app and Plasma widgets query
+When **Check for updates** is enabled, the Plasma widgets query
 [GitHub Releases](https://github.com/EmmanouelKontos/TickerLens/releases) about once a day.
 If a newer version is found, you get a desktop notification and a popup with:
 
-- **Install & restart** (Windows) / **Install now** (Plasma) — downloads the matching asset from GitHub and applies it (app restarts on Windows; Plasma widgets upgrade via `install.sh`)
+- **Install now** — downloads the matching asset and upgrades the Plasma widgets via `install.sh`
 - **Open page** — release notes and manual download
 - **Later** — remind again after the next daily check
 - **Skip this version** — do not prompt again until a newer release
@@ -152,11 +152,12 @@ Recommended model: **`deepseek-chat`**.
 
 ## Windows 11
 
-A full desktop port lives in [`windows/`](windows/) (Qt 6 floating glass windows + system tray).
+A separate native Windows port lives in [`windows-native/`](windows-native/).
+It uses WPF/.NET 8, DirectWrite/DirectX rendering, and the Windows 11 DWM
+Desktop Acrylic system backdrop.
 
 ```powershell
-cd windows
-.\build-windows.ps1 -QtPath "C:\Qt\6.7.3\msvc2019_64"
+dotnet publish windows-native\TickerLens.Native.csproj -c Release -r win-x64 --self-contained true
 ```
 
 See [windows/README.md](windows/README.md) for build requirements and feature parity with Plasma.
@@ -168,7 +169,8 @@ See [windows/README.md](windows/README.md) for build requirements and feature pa
 ```
 package/           # Plasma 6 — TickerLens
 news-package/      # Plasma 6 — TickerLens News
-windows/           # Windows 11 / desktop Qt 6 app
+windows-native/    # Windows 11 native WPF / DWM Acrylic app
+windows/           # Legacy Qt app and installer resources
 install.sh         # Linux Plasma install
 README.md
 LICENSE            # GNU GPL v3
