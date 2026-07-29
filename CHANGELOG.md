@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.6.0
 
 - **Check for updates** (Windows + Plasma): polls GitHub Releases once per day when enabled
 - Popup + desktop notification with **Install & restart** / **Install now**, open release page, Later, or Skip this version

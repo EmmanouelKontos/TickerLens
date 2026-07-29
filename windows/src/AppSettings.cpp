@@ -188,5 +188,5 @@ void AppSettings::setDismissedUpdateVersion(const QString &v) { set(QStringLiter
 QString AppSettings::appVersion() const
 {
     const QString v = QCoreApplication::applicationVersion();
-    return v.isEmpty() ? QStringLiteral("1.5.0") : v;
+    return v.isEmpty() ? QStringLiteral("1.6.0") : v;
 }
