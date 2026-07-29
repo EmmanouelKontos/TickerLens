@@ -1103,5 +1103,15 @@ ListModel { id: stockModel }
 
     StockSettingsDialog {
         id: stockSettings
+        onCheckUpdatesRequested: {
+            // Bubble to App.qml (parent Item) which owns UpdateChecker
+            if (root.parent && root.parent.checkForUpdatesNow)
+                root.parent.checkForUpdatesNow()
+        }
+    }
+
+    function setUpdateCheckStatus(text) {
+        if (stockSettings)
+            stockSettings.setUpdateStatus(text)
     }
 }

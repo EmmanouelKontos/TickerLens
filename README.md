@@ -107,6 +107,19 @@ kpackagetool6 --type Plasma/Applet --remove com.github.stockglass.news
 
 ---
 
+## Updates
+
+When **Check for updates** is enabled (default), the Windows app and Plasma widgets query
+[GitHub Releases](https://github.com/EmmanouelKontos/TickerLens/releases) about once a day.
+If a newer version is found, you get a desktop notification and a popup with:
+
+- **Install & restart** (Windows) / **Install now** (Plasma) — downloads the matching asset from GitHub and applies it (app restarts on Windows; Plasma widgets upgrade via `install.sh`)
+- **Open page** — release notes and manual download
+- **Later** — remind again after the next daily check
+- **Skip this version** — do not prompt again until a newer release
+
+Install always requires your confirmation. Disable checks anytime in Configure / Settings.
+
 ## Configuration tips
 
 1. Open **TickerLens** once so it writes  
@@ -132,6 +145,7 @@ Recommended model: **`deepseek-chat`**.
 | `~/.config/stockglass/deepseek.key` | API key (mode 600) |
 | `~/.config/stockglass/rate_news.py` | AI helper (installed by `install.sh`) |
 | `~/.config/stockglass/ds_payload.json` | Temporary AI request body |
+| `~/.config/stockglass/update_state.json` | Last update-check / dismissed version (Plasma) |
 
 ---
 

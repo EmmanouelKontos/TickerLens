@@ -8,6 +8,8 @@
         <file>qml/components/IconBtn.qml</file>
         <file>qml/components/StockSettingsDialog.qml</file>
         <file>qml/components/NewsSettingsDialog.qml</file>
+        <file>qml/components/UpdateChecker.qml</file>
+        <file>qml/components/UpdateDialog.qml</file>
         <file>scripts/rate_news.py</file>
     </qresource>
 </RCC>

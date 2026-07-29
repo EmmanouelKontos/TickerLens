@@ -1,5 +1,7 @@
 #include "AppSettings.h"
 
+#include <QCoreApplication>
+
 AppSettings::AppSettings(QObject *parent)
     : QObject(parent)
     , m_settings(QSettings::IniFormat, QSettings::UserScope, QStringLiteral("TickerLens"), QStringLiteral("TickerLens"))
@@ -176,3 +178,15 @@ bool AppSettings::showStockWindow() const { return get(QStringLiteral("showStock
 void AppSettings::setShowStockWindow(bool v) { set(QStringLiteral("showStockWindow"), v); }
 bool AppSettings::showNewsWindow() const { return get(QStringLiteral("showNewsWindow"), true).toBool(); }
 void AppSettings::setShowNewsWindow(bool v) { set(QStringLiteral("showNewsWindow"), v); }
+
+bool AppSettings::checkForUpdates() const { return get(QStringLiteral("checkForUpdates"), true).toBool(); }
+void AppSettings::setCheckForUpdates(bool v) { set(QStringLiteral("checkForUpdates"), v); }
+qint64 AppSettings::lastUpdateCheckMs() const { return get(QStringLiteral("lastUpdateCheckMs"), 0).toLongLong(); }
+void AppSettings::setLastUpdateCheckMs(qint64 v) { set(QStringLiteral("lastUpdateCheckMs"), QVariant::fromValue(v)); }
+QString AppSettings::dismissedUpdateVersion() const { return get(QStringLiteral("dismissedUpdateVersion"), QString()).toString(); }
+void AppSettings::setDismissedUpdateVersion(const QString &v) { set(QStringLiteral("dismissedUpdateVersion"), v); }
+QString AppSettings::appVersion() const
+{
+    const QString v = QCoreApplication::applicationVersion();
+    return v.isEmpty() ? QStringLiteral("1.5.0") : v;
+}

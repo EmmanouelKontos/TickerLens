@@ -211,8 +211,10 @@ QString PlatformUtils::runDeepSeek(const QString &payloadJson, const QString &ap
         return QStringLiteral("{\"error\":\"timeout\"}");
     }
     if (proc.exitCode() != 0) {
-        const QString err = QString::fromUtf8(proc.readAllStandardError());
-        return QStringLiteral("{\"error\":%1}").arg(QString::fromUtf8(QJsonDocument(QJsonObject{{QStringLiteral("msg"), err.left(300)}}).toJson(QJsonDocument::Compact)));
+        const QString err = QString::fromUtf8(proc.readAllStandardError()).left(300);
+        QJsonObject o;
+        o.insert(QStringLiteral("error"), err);
+        return QString::fromUtf8(QJsonDocument(o).toJson(QJsonDocument::Compact));
     }
     return QString::fromUtf8(proc.readAllStandardOutput());
 }

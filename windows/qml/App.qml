@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Window
+import "components"
 
 Item {
     id: root
@@ -15,6 +16,9 @@ Item {
         AppSettings.showNewsWindow = newsWin.visible
         AppSettings.sync()
     }
+    function checkForUpdatesNow() {
+        updater.check(true)
+    }
 
     StockWindow {
         id: stockWin
@@ -28,7 +32,6 @@ Item {
         y: 80
     }
 
-    // Keep settings in sync if closed via X
     Connections {
         target: stockWin
         function onVisibleChanged() {
@@ -39,6 +42,90 @@ Item {
         target: newsWin
         function onVisibleChanged() {
             AppSettings.showNewsWindow = newsWin.visible
+        }
+    }
+
+    UpdateChecker {
+        id: updater
+        enabled: AppSettings.checkForUpdates !== false
+        currentVersion: AppSettings.appVersion
+
+        onUpdateFound: function(version, url, name, notes, winAsset, linuxAsset) {
+            Platform.showNotification(
+                "TickerLens update available",
+                "Version " + version + " is ready to install")
+            stockWin.setUpdateCheckStatus("Update " + version + " available")
+            updateDlg.currentVersion = AppSettings.appVersion
+            updateDlg.latestVersion = version
+            updateDlg.releaseName = name
+            updateDlg.releaseNotes = notes
+            updateDlg.releaseUrl = url
+            updateDlg.canInstall = !!(Platform.isWindows ? winAsset : (linuxAsset || winAsset))
+            updateDlg.installing = false
+            updateDlg.installProgress = 0
+            updateDlg.installStatus = ""
+            if (!stockWin.visible && !newsWin.visible)
+                stockWin.visible = true
+            updateDlg.open()
+        }
+        onCheckFinished: function(available) {
+            if (!available)
+                stockWin.setUpdateCheckStatus("Up to date (v" + AppSettings.appVersion + ")")
+        }
+        onCheckFailed: function(error) {
+            stockWin.setUpdateCheckStatus("Check failed: " + error)
+        }
+    }
+
+    UpdateDialog {
+        id: updateDlg
+        parent: stockWin.contentItem
+        anchors.centerIn: stockWin.contentItem
+
+        onInstallRequested: {
+            var url = updater.platformAssetUrl()
+            if (!url) {
+                Platform.openUrl(releaseUrl || "https://github.com/EmmanouelKontos/TickerLens/releases/latest")
+                return
+            }
+            installing = true
+            installProgress = 0
+            installStatus = "Starting download…"
+            UpdateInstaller.downloadAndInstall(url, latestVersion)
+        }
+        onDownloadPageRequested: {
+            Platform.openUrl(releaseUrl || "https://github.com/EmmanouelKontos/TickerLens/releases/latest")
+        }
+        onLaterRequested: { }
+        onDismissVersionRequested: {
+            updater.dismissCurrent()
+        }
+    }
+
+    Connections {
+        target: UpdateInstaller
+        function onProgressChanged() {
+            updateDlg.installProgress = UpdateInstaller.progress
+        }
+        function onStatusChanged() {
+            updateDlg.installStatus = UpdateInstaller.status
+            stockWin.setUpdateCheckStatus(UpdateInstaller.status)
+        }
+        function onFailed(error) {
+            updateDlg.installing = false
+            updateDlg.installStatus = error
+            stockWin.setUpdateCheckStatus("Update failed: " + error)
+            Platform.showNotification("TickerLens update failed", error)
+        }
+        function onFinished(success, message) {
+            if (!success) {
+                updateDlg.installing = false
+                return
+            }
+            updateDlg.installStatus = message
+            stockWin.setUpdateCheckStatus(message)
+            Platform.showNotification("TickerLens", message)
+            // On Windows, app quits automatically to apply files
         }
     }
 

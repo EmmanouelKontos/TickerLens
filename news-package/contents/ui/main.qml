@@ -30,6 +30,20 @@ PlasmoidItem {
     readonly property bool useDeepSeek: Plasmoid.configuration.useDeepSeek !== false
     readonly property string deepseekApiKeyConfig: (Plasmoid.configuration.deepseekApiKey || "").trim()
     readonly property string deepseekModel: (Plasmoid.configuration.deepseekModel || "deepseek-chat").trim() || "deepseek-chat"
+    readonly property bool checkForUpdates: Plasmoid.configuration.checkForUpdates !== false
+    readonly property string appVersion: "1.5.0"
+    readonly property string updateApiUrl: "https://api.github.com/repos/EmmanouelKontos/TickerLens/releases/latest"
+    readonly property string updateFallbackUrl: "https://github.com/EmmanouelKontos/TickerLens/releases/latest"
+
+    property bool updateChecking: false
+    property bool updateInstalling: false
+    property string updateLatestVersion: ""
+    property string updateReleaseUrl: updateFallbackUrl
+    property string updateReleaseName: ""
+    property string updateReleaseNotes: ""
+    property string updateAssetUrl: ""
+    property string updateInstallStatus: ""
+    property var updateState: ({ lastCheckMs: 0, dismissedVersion: "", notifiedVersion: "" })
 
     // Resolved key: settings first, else file (~/.config/stockglass/deepseek.key)
     property string deepseekApiKey: ""
@@ -519,6 +533,164 @@ PlasmoidItem {
             Qt.openUrlExternally(url)
     }
 
+    function sendNotification(title, body) {
+        notifyExec.connectedSources = []
+        var cmd = "notify-send -a 'TickerLens' -i office-chart-line "
+                + shellQuote(title) + " " + shellQuote(body)
+        notifyExec.connectedSources = [cmd]
+    }
+    function shellQuote(s) {
+        return "'" + String(s).replace(/'/g, "'\\''") + "'"
+    }
+
+    // ── GitHub update check (shared state with stock widget) ──
+    function normalizeVersion(v) {
+        return String(v || "").replace(/^v/i, "").trim()
+    }
+    function versionParts(v) {
+        var core = normalizeVersion(v).split("+")[0].split("-")[0]
+        var bits = core.split(".")
+        var out = []
+        for (var i = 0; i < 3; i++) {
+            var p = parseInt(bits[i] || "0", 10)
+            out.push(isNaN(p) ? 0 : p)
+        }
+        return out
+    }
+    function isNewerVersion(remote, local) {
+        var a = versionParts(remote)
+        var b = versionParts(local)
+        for (var i = 0; i < 3; i++) {
+            if (a[i] > b[i]) return true
+            if (a[i] < b[i]) return false
+        }
+        return false
+    }
+    function saveUpdateState() {
+        try {
+            var payload = JSON.stringify(updateState)
+            var escaped = payload.replace(/'/g, "'\\''")
+            var cmd = "mkdir -p \"$HOME/.config/stockglass\" && printf '%s\\n' '"
+                    + escaped + "' > \"$HOME/.config/stockglass/update_state.json\""
+            updateStateWriteExec.connectedSources = []
+            updateStateWriteExec.connectedSources = [cmd]
+        } catch (e) {}
+    }
+    function loadUpdateStateThenCheck(force) {
+        updateStateExec.pendingForce = !!force
+        updateStateExec.connectedSources = []
+        updateStateExec.connectedSources = [
+            "cat \"$HOME/.config/stockglass/update_state.json\" 2>/dev/null || echo '{}'"
+        ]
+    }
+    function maybeCheckForUpdates(force) {
+        if (!force && !checkForUpdates)
+            return
+        if (updateChecking)
+            return
+        loadUpdateStateThenCheck(!!force)
+    }
+    function runUpdateCheck(force) {
+        if (updateChecking)
+            return
+        var dayMs = 24 * 60 * 60 * 1000
+        var last = Number(updateState.lastCheckMs || 0)
+        if (!force && last && (Date.now() - last) < dayMs)
+            return
+
+        updateChecking = true
+        var xhr = new XMLHttpRequest()
+        xhr.open("GET", updateApiUrl)
+        xhr.setRequestHeader("Accept", "application/vnd.github+json")
+        xhr.setRequestHeader("User-Agent", "TickerLens-UpdateCheck")
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState !== XMLHttpRequest.DONE)
+                return
+            updateChecking = false
+            updateState.lastCheckMs = Date.now()
+            saveUpdateState()
+            if (xhr.status !== 200)
+                return
+            try {
+                var json = JSON.parse(xhr.responseText)
+                var ver = normalizeVersion(json.tag_name || "")
+                if (!ver || !isNewerVersion(ver, appVersion))
+                    return
+                if (normalizeVersion(updateState.dismissedVersion) === ver)
+                    return
+                if (normalizeVersion(updateState.notifiedVersion) === ver
+                        && (Date.now() - Number(updateState.notifiedMs || 0)) < dayMs)
+                    return
+
+                updateLatestVersion = ver
+                updateReleaseUrl = json.html_url || updateFallbackUrl
+                updateReleaseName = json.name || ("TickerLens " + ver)
+                var body = String(json.body || "")
+                updateReleaseNotes = body.length > 400 ? body.substring(0, 400) + "…" : body
+                updateAssetUrl = pickLinuxAsset(json.assets || [])
+
+                updateState.notifiedVersion = ver
+                updateState.notifiedMs = Date.now()
+                saveUpdateState()
+
+                sendNotification(
+                    "TickerLens update available",
+                    "Version " + ver + " is ready to install")
+                updateInstallStatus = ""
+                updateInstalling = false
+                updateDialog.open()
+            } catch (e) {
+                console.log("TickerLens News update check", e)
+            }
+        }
+        xhr.send()
+    }
+    function pickLinuxAsset(assets) {
+        for (var i = 0; i < assets.length; i++) {
+            var a = assets[i]
+            var name = String(a.name || "").toLowerCase()
+            var url = a.browser_download_url || ""
+            if (!url)
+                continue
+            if ((name.indexOf("linux") >= 0 || name.indexOf("plasma") >= 0)
+                    && (name.indexOf(".tar.gz") >= 0 || name.indexOf(".tgz") >= 0))
+                return url
+        }
+        return ""
+    }
+    function dismissUpdateVersion() {
+        if (updateLatestVersion) {
+            updateState.dismissedVersion = updateLatestVersion
+            saveUpdateState()
+        }
+        updateDialog.close()
+    }
+    function installUpdateFromGitHub() {
+        if (updateInstalling)
+            return
+        if (!updateAssetUrl) {
+            Qt.openUrlExternally(updateReleaseUrl || updateFallbackUrl)
+            return
+        }
+        updateInstalling = true
+        updateInstallStatus = i18n("Downloading and installing…")
+        var url = updateAssetUrl.replace(/'/g, "'\\''")
+        var cmd = "set -e; "
+                + "TMP=$(mktemp -d /tmp/tickerlens-update.XXXXXX); "
+                + "ARCHIVE=\"$TMP/pkg.tar.gz\"; "
+                + "if command -v curl >/dev/null 2>&1; then curl -fsSL -A 'TickerLens-Update' -o \"$ARCHIVE\" '" + url + "'; "
+                + "elif command -v wget >/dev/null 2>&1; then wget -q -O \"$ARCHIVE\" '" + url + "'; "
+                + "else echo 'NEED_CURL_OR_WGET'; exit 2; fi; "
+                + "tar -xzf \"$ARCHIVE\" -C \"$TMP\"; "
+                + "INST=$(find \"$TMP\" -name install.sh -type f | head -1); "
+                + "if [ -z \"$INST\" ]; then echo 'NO_INSTALL_SH'; exit 3; fi; "
+                + "chmod +x \"$INST\"; "
+                + "bash \"$INST\"; "
+                + "echo 'OK_INSTALLED'"
+        updateInstallExec.connectedSources = []
+        updateInstallExec.connectedSources = ["bash -c " + shellQuote(cmd)]
+    }
+
     Plasma5Support.DataSource {
         id: sharedExec
         engine: "executable"
@@ -526,6 +698,148 @@ PlasmoidItem {
         onNewData: function(source, data) {
             disconnectSource(source)
             onSharedLoaded(data["stdout"] || "")
+        }
+    }
+
+    Plasma5Support.DataSource {
+        id: notifyExec
+        engine: "executable"
+        connectedSources: []
+        onNewData: function(sourceName) { disconnectSource(sourceName) }
+    }
+
+    Plasma5Support.DataSource {
+        id: updateStateExec
+        engine: "executable"
+        connectedSources: []
+        property bool pendingForce: false
+        onNewData: function(source, data) {
+            disconnectSource(source)
+            try {
+                var raw = (data["stdout"] || "").toString().trim() || "{}"
+                var obj = JSON.parse(raw)
+                if (obj && typeof obj === "object")
+                    root.updateState = obj
+            } catch (e) {
+                root.updateState = { lastCheckMs: 0, dismissedVersion: "", notifiedVersion: "" }
+            }
+            root.runUpdateCheck(pendingForce)
+        }
+    }
+    Plasma5Support.DataSource {
+        id: updateStateWriteExec
+        engine: "executable"
+        connectedSources: []
+        onNewData: function(sourceName) { disconnectSource(sourceName) }
+    }
+
+    Plasma5Support.DataSource {
+        id: updateInstallExec
+        engine: "executable"
+        connectedSources: []
+        onNewData: function(source, data) {
+            disconnectSource(source)
+            root.updateInstalling = false
+            var out = ((data["stdout"] || "") + "\n" + (data["stderr"] || "")).toString()
+            var code = data["exit code"] !== undefined ? data["exit code"] : data["exitCode"]
+            var ok = (code === 0 || code === "0") && out.indexOf("OK_INSTALLED") >= 0
+            if (ok) {
+                root.updateInstallStatus = i18n("Installed. Reload Plasma if the UI looks stale.")
+                root.sendNotification("TickerLens", "Update installed — reload Plasma if needed")
+                root.statusText = "Updated to " + root.updateLatestVersion
+            } else {
+                var err = out.trim().split("\n").pop() || ("exit " + code)
+                root.updateInstallStatus = i18n("Install failed: %1", err)
+                root.sendNotification("TickerLens update failed", err)
+            }
+        }
+    }
+
+    Dialog {
+        id: updateDialog
+        title: i18n("Update available")
+        modal: true
+        standardButtons: Dialog.NoButton
+        width: Math.min(400, parent ? parent.width - 20 : 400)
+        closePolicy: root.updateInstalling ? Popup.NoAutoClose : Popup.CloseOnEscape | Popup.CloseOnPressOutside
+
+        ColumnLayout {
+            anchors.fill: parent
+            spacing: Kirigami.Units.smallSpacing
+
+            Label {
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                text: i18n("TickerLens <b>%1</b> is available.<br>You have <b>%2</b>.",
+                           root.updateLatestVersion, root.appVersion)
+                textFormat: Text.RichText
+            }
+            Label {
+                Layout.fillWidth: true
+                visible: root.updateReleaseName.length > 0 && !root.updateInstalling
+                wrapMode: Text.WordWrap
+                font.bold: true
+                text: root.updateReleaseName
+            }
+            Label {
+                Layout.fillWidth: true
+                visible: root.updateReleaseNotes.length > 0 && !root.updateInstalling
+                wrapMode: Text.WordWrap
+                opacity: 0.8
+                font.pointSize: 9
+                text: root.updateReleaseNotes
+            }
+            Label {
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                opacity: 0.7
+                font.pointSize: 9
+                visible: !root.updateInstalling
+                text: root.updateAssetUrl
+                      ? i18n("Install downloads the Plasma package from GitHub and runs install.sh.")
+                      : i18n("Open the GitHub release page to download the Linux package.")
+            }
+            Label {
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                visible: root.updateInstallStatus.length > 0
+                text: root.updateInstallStatus
+            }
+            BusyIndicator {
+                Layout.alignment: Qt.AlignHCenter
+                running: root.updateInstalling
+                visible: root.updateInstalling
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                visible: !root.updateInstalling
+                Button {
+                    text: root.updateAssetUrl ? i18n("Install now") : i18n("Download page")
+                    onClicked: {
+                        if (root.updateAssetUrl)
+                            root.installUpdateFromGitHub()
+                        else {
+                            Qt.openUrlExternally(root.updateReleaseUrl || root.updateFallbackUrl)
+                            updateDialog.close()
+                        }
+                    }
+                }
+                Button {
+                    text: i18n("Open page")
+                    visible: !!root.updateAssetUrl
+                    onClicked: Qt.openUrlExternally(root.updateReleaseUrl || root.updateFallbackUrl)
+                }
+                Button {
+                    text: i18n("Later")
+                    onClicked: updateDialog.close()
+                }
+                Item { Layout.fillWidth: true }
+                Button {
+                    text: i18n("Skip this version")
+                    flat: true
+                    onClicked: root.dismissUpdateVersion()
+                }
+            }
         }
     }
 
@@ -601,6 +915,22 @@ PlasmoidItem {
         running: root.useSharedWatchlist
         repeat: true
         onTriggered: root.loadSharedWatchlist()
+    }
+
+    // Startup delayed past stock widget so only one notify typically fires
+    Timer {
+        id: updateStartupTimer
+        interval: 14000
+        running: root.checkForUpdates
+        repeat: false
+        onTriggered: root.maybeCheckForUpdates(false)
+    }
+    Timer {
+        id: updateHourlyTimer
+        interval: 60 * 60 * 1000
+        running: root.checkForUpdates
+        repeat: true
+        onTriggered: root.maybeCheckForUpdates(false)
     }
 
     onRefreshMinutesChanged: {

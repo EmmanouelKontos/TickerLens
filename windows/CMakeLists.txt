@@ -14,6 +14,8 @@ qt_add_executable(TickerLens
     src/main.cpp
     src/AppSettings.cpp
     src/PlatformUtils.cpp
+    src/UpdateInstaller.cpp
+    src/win_main.cpp
     resources.qrc
 )
 
@@ -35,7 +37,13 @@ if(WIN32)
         WIN32_EXECUTABLE TRUE
         OUTPUT_NAME "TickerLens"
     )
-    target_link_libraries(TickerLens PRIVATE dwmapi)
+    # Custom WinMain in win_main.cpp — skip Qt EntryPoint which needs __argc
+    if(TARGET Qt6::EntryPointPrivate)
+        # nothing
+    endif()
+    # Prevent automatic Qt winmain when possible
+    target_compile_definitions(TickerLens PRIVATE QT_NO_ENTRYPOINT=1)
+    target_link_libraries(TickerLens PRIVATE dwmapi shell32)
 endif()
 
 install(TARGETS TickerLens

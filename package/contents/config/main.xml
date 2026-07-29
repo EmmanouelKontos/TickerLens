@@ -157,5 +157,11 @@
         <entry name="cornerRadius" type="Int">
             <default>20</default>
         </entry>
+
+        <!-- Updates (GitHub Releases) -->
+        <entry name="checkForUpdates" type="Bool">
+            <label>Check for updates on GitHub</label>
+            <default>true</default>
+        </entry>
     </group>
 </kcfg>

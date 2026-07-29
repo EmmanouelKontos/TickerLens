@@ -18,6 +18,7 @@ KCM.SimpleKCM {
     property alias cfg_deepseekApiKey: apiKeyField.text
     property alias cfg_deepseekModel: modelField.text
     property alias cfg_glassOpacity: glassSlider.value
+    property alias cfg_checkForUpdates: checkUpdates.checked
 
     Kirigami.FormLayout {
         anchors.fill: parent
@@ -97,6 +98,22 @@ KCM.SimpleKCM {
                 Layout.fillWidth: true
             }
             Label { text: glassSlider.value + "%" }
+        }
+
+        Kirigami.Separator {
+            Kirigami.FormData.label: i18n("Updates")
+            Kirigami.FormData.isSection: true
+        }
+        CheckBox {
+            id: checkUpdates
+            text: i18n("Check for updates (GitHub Releases)")
+        }
+        Label {
+            text: i18n("When enabled, checks about once a day for new releases. You can install from GitHub in the popup (or open the release page).")
+            wrapMode: Text.WordWrap
+            opacity: 0.7
+            font.pointSize: 9
+            Layout.maximumWidth: 400
         }
     }
 }

@@ -32,6 +32,7 @@ KCM.SimpleKCM {
     property alias cfg_pulseOnChange: pulse.checked
     property alias cfg_sparkleMinWidth: sparkMin.value
     property alias cfg_multiColumnMinWidth: multiMin.value
+    property alias cfg_checkForUpdates: checkUpdates.checked
     property double cfg_athNearThreshold
 
     Kirigami.FormLayout {
@@ -143,6 +144,22 @@ KCM.SimpleKCM {
             valueFromText: function(t) { return Math.round(parseFloat(t) * 100) }
             onValueModified: cfg_athNearThreshold = value / 100.0
             Component.onCompleted: value = Math.round((cfg_athNearThreshold || 0.25) * 100)
+        }
+
+        Kirigami.Separator {
+            Kirigami.FormData.label: i18n("Updates")
+            Kirigami.FormData.isSection: true
+        }
+        CheckBox {
+            id: checkUpdates
+            text: i18n("Check for updates (GitHub Releases)")
+        }
+        Label {
+            text: i18n("When enabled, checks about once a day for new releases. You can install from GitHub in the popup (or open the release page).")
+            wrapMode: Text.WordWrap
+            opacity: 0.7
+            font.pointSize: 9
+            Layout.maximumWidth: 380
         }
     }
 }

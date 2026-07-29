@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- **Check for updates** (Windows + Plasma): polls GitHub Releases once per day when enabled
+- Popup + desktop notification with **Install & restart** / **Install now**, open release page, Later, or Skip this version
+- **Auto install** (user confirms): Windows downloads zip, applies into install folder, restarts; Plasma downloads tarball and runs `install.sh`
+- Settings toggle: **Check for updates** (on by default); Windows also has **Check now**
+
 ## 1.5.0
 
 - Product name: **TickerLens** (+ **TickerLens News**)

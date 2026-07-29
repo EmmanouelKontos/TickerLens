@@ -1,5 +1,6 @@
 #include "AppSettings.h"
 #include "PlatformUtils.h"
+#include "UpdateInstaller.h"
 
 #include <QApplication>
 #include <QIcon>
@@ -42,10 +43,12 @@ int main(int argc, char *argv[])
 
     AppSettings settings;
     PlatformUtils platform;
+    UpdateInstaller updater;
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty(QStringLiteral("AppSettings"), &settings);
     engine.rootContext()->setContextProperty(QStringLiteral("Platform"), &platform);
+    engine.rootContext()->setContextProperty(QStringLiteral("UpdateInstaller"), &updater);
 
     const QUrl url(QStringLiteral("qrc:/qml/App.qml"));
     QObject::connect(

@@ -74,6 +74,12 @@ class AppSettings : public QObject
     Q_PROPERTY(bool showStockWindow READ showStockWindow WRITE setShowStockWindow NOTIFY settingsChanged)
     Q_PROPERTY(bool showNewsWindow READ showNewsWindow WRITE setShowNewsWindow NOTIFY settingsChanged)
 
+    // Updates
+    Q_PROPERTY(bool checkForUpdates READ checkForUpdates WRITE setCheckForUpdates NOTIFY settingsChanged)
+    Q_PROPERTY(qint64 lastUpdateCheckMs READ lastUpdateCheckMs WRITE setLastUpdateCheckMs NOTIFY settingsChanged)
+    Q_PROPERTY(QString dismissedUpdateVersion READ dismissedUpdateVersion WRITE setDismissedUpdateVersion NOTIFY settingsChanged)
+    Q_PROPERTY(QString appVersion READ appVersion CONSTANT)
+
 public:
     explicit AppSettings(QObject *parent = nullptr);
 
@@ -201,6 +207,14 @@ public:
     void setShowStockWindow(bool v);
     bool showNewsWindow() const;
     void setShowNewsWindow(bool v);
+
+    bool checkForUpdates() const;
+    void setCheckForUpdates(bool v);
+    qint64 lastUpdateCheckMs() const;
+    void setLastUpdateCheckMs(qint64 v);
+    QString dismissedUpdateVersion() const;
+    void setDismissedUpdateVersion(const QString &v);
+    QString appVersion() const;
 
     Q_INVOKABLE void sync();
 
